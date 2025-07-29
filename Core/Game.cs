@@ -93,8 +93,10 @@ namespace WormholeGame.Core
                 Player.Size, 
                 Player.Size);
             
-            foreach (var missile in CurrentLevel.Missiles)
+            // Check collisions in reverse order so we can safely remove items
+            for (int i = CurrentLevel.Missiles.Count - 1; i >= 0; i--)
             {
+                var missile = CurrentLevel.Missiles[i];
                 Rectangle missileRect = new Rectangle(
                     missile.X - missile.Size/2, 
                     missile.Y - missile.Size/2,
@@ -103,6 +105,9 @@ namespace WormholeGame.Core
                 
                 if (playerRect.IntersectsWith(missileRect))
                 {
+                    // Remove the missile that hit the player
+                    CurrentLevel.Missiles.RemoveAt(i);
+                    Console.WriteLine($"💥 Missile destroyed on impact with player!");
                     return true; // Collision detected
                 }
             }

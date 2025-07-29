@@ -12,8 +12,10 @@ namespace WormholeGame.GameObjects
         // Player constants
         public const int DEFAULT_SIZE = 20;
         public const int DEFAULT_SPEED = 5;
+        public const int MAX_HEALTH = 100;
         
-        public int Health { get; private set; } = 100; // Player health, can be used for damage logic
+        public int Health { get; private set; } = MAX_HEALTH;
+        public int MaxHealth => MAX_HEALTH;
         public Player(int x, int y, int size = DEFAULT_SIZE)
         {
             X = x;
