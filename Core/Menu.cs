@@ -51,6 +51,16 @@ namespace WormholeGame.Core
             isSettingsButtonHovered = settingsButton.Contains(mouseX, mouseY);
         }
         
+        public void HandleMouseMove(int mouseX, int mouseY, Form form)
+        {
+            // Scale mouse coordinates back to game resolution
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            int scaledX = (int)(mouseX / scaleX);
+            int scaledY = (int)(mouseY / scaleY);
+            
+            HandleMouseMove(scaledX, scaledY);
+        }
+        
         public string HandleMouseClick(int mouseX, int mouseY)
         {
             if (playButton.Contains(mouseX, mouseY))
@@ -67,6 +77,16 @@ namespace WormholeGame.Core
             return ""; // No button clicked
         }
         
+        public string HandleMouseClick(int mouseX, int mouseY, Form form)
+        {
+            // Scale mouse coordinates back to game resolution
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            int scaledX = (int)(mouseX / scaleX);
+            int scaledY = (int)(mouseY / scaleY);
+            
+            return HandleMouseClick(scaledX, scaledY);
+        }
+        
         public void Show()
         {
             IsVisible = true;
@@ -80,7 +100,7 @@ namespace WormholeGame.Core
         public void Render(Graphics graphics)
         {
             if (!IsVisible) return;
-            
+
             // Semi-transparent overlay
             using (Brush overlay = new SolidBrush(Color.FromArgb(128, 0, 0, 0)))
             {
@@ -105,7 +125,25 @@ namespace WormholeGame.Core
             }
         }
         
-        private void RenderButton(Graphics graphics, Rectangle button, bool isHovered, string text)
+        public void Render(Graphics graphics, Form form)
+        {
+            if (!IsVisible) return;
+            
+            // Get scaling factors
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            
+            // Save the original transform
+            var originalTransform = graphics.Transform;
+            
+            // Apply scaling transform
+            graphics.ScaleTransform(scaleX, scaleY);
+            
+            // Render normally (everything will be scaled)
+            Render(graphics);
+            
+            // Restore original transform
+            graphics.Transform = originalTransform;
+        }        private void RenderButton(Graphics graphics, Rectangle button, bool isHovered, string text)
         {
             // Modern text-based button - no backgrounds, just clean text
             Color textColor = isHovered ? Color.Gray : Color.White;

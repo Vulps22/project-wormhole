@@ -116,5 +116,45 @@ namespace WormholeGame.Core
                 graphics.DrawString(buttonText, buttonFont, textBrush, textX, textY);
             }
         }
+        
+        public void Render(Graphics graphics, Form form)
+        {
+            if (!IsVisible) return;
+            
+            // Get scaling factors
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            
+            // Save the original transform
+            var originalTransform = graphics.Transform;
+            
+            // Apply scaling transform
+            graphics.ScaleTransform(scaleX, scaleY);
+            
+            // Render normally (everything will be scaled)
+            Render(graphics);
+            
+            // Restore original transform
+            graphics.Transform = originalTransform;
+        }
+        
+        public void HandleMouseMove(int mouseX, int mouseY, Form form)
+        {
+            // Scale mouse coordinates back to game resolution
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            int scaledX = (int)(mouseX / scaleX);
+            int scaledY = (int)(mouseY / scaleY);
+            
+            HandleMouseMove(scaledX, scaledY);
+        }
+        
+        public bool HandleMouseClick(int mouseX, int mouseY, Form form)
+        {
+            // Scale mouse coordinates back to game resolution
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            int scaledX = (int)(mouseX / scaleX);
+            int scaledY = (int)(mouseY / scaleY);
+            
+            return HandleMouseClick(scaledX, scaledY);
+        }
     }
 }

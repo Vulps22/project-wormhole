@@ -133,6 +133,24 @@ namespace WormholeGame.Core
             }
         }
         
+        public void Render(Graphics graphics, Form form)
+        {
+            // Get scaling factors
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            
+            // Save the original transform
+            var originalTransform = graphics.Transform;
+            
+            // Apply scaling transform
+            graphics.ScaleTransform(scaleX, scaleY);
+            
+            // Render normally (everything will be scaled)
+            Render(graphics);
+            
+            // Restore original transform
+            graphics.Transform = originalTransform;
+        }
+        
         private void RenderHUD(Graphics graphics)
         {
             using (Brush textBrush = new SolidBrush(Color.White))

@@ -71,5 +71,29 @@ namespace WormholeGame.Core
         {
             return $"{Resolution.Width}x{Resolution.Height}";
         }
+        
+        public Size GetActualRenderSize(Form form)
+        {
+            switch (WindowMode)
+            {
+                case WindowMode.Windowed:
+                    return Resolution;
+                    
+                case WindowMode.FullScreen:
+                case WindowMode.FullScreenWindowed:
+                    return form.ClientSize;
+                    
+                default:
+                    return Resolution;
+            }
+        }
+        
+        public (float scaleX, float scaleY) GetScalingFactors(Form form)
+        {
+            var actualSize = GetActualRenderSize(form);
+            float scaleX = (float)actualSize.Width / Resolution.Width;
+            float scaleY = (float)actualSize.Height / Resolution.Height;
+            return (scaleX, scaleY);
+        }
     }
 }

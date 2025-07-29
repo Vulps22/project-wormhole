@@ -82,6 +82,16 @@ namespace WormholeGame.Core
             isApplyHovered = applyButton.Contains(mouseX, mouseY);
             isBackHovered = backButton.Contains(mouseX, mouseY);
         }
+        
+        public void HandleMouseMove(int mouseX, int mouseY, Form form)
+        {
+            // Scale mouse coordinates back to game resolution
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            int scaledX = (int)(mouseX / scaleX);
+            int scaledY = (int)(mouseY / scaleY);
+            
+            HandleMouseMove(scaledX, scaledY);
+        }
 
         public bool HandleMouseClick(int mouseX, int mouseY)
         {
@@ -108,6 +118,16 @@ namespace WormholeGame.Core
 
             return false;
         }
+        
+        public bool HandleMouseClick(int mouseX, int mouseY, Form form)
+        {
+            // Scale mouse coordinates back to game resolution
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            int scaledX = (int)(mouseX / scaleX);
+            int scaledY = (int)(mouseY / scaleY);
+            
+            return HandleMouseClick(scaledX, scaledY);
+        }
 
         private void CycleWindowMode()
         {
@@ -127,6 +147,9 @@ namespace WormholeGame.Core
         {
             Settings.Instance.ApplyToForm(Window);
             IsDirty = true; // Mark settings as dirty so Form1 can reinitialize
+
+            // Immediately recalculate our own layout since resolution might have changed
+            SetupButtons();
 
             // This will be handled by Form1 when it detects settings change
             Console.WriteLine("Settings applied!");
@@ -165,6 +188,26 @@ namespace WormholeGame.Core
 
             // Back button
             RenderButton(graphics, backButton, isBackHovered, "BACK");
+        }
+        
+        public void Render(Graphics graphics, Form form)
+        {
+            if (!IsVisible) return;
+            
+            // Get scaling factors
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            
+            // Save the original transform
+            var originalTransform = graphics.Transform;
+            
+            // Apply scaling transform
+            graphics.ScaleTransform(scaleX, scaleY);
+            
+            // Render normally (everything will be scaled)
+            Render(graphics);
+            
+            // Restore original transform
+            graphics.Transform = originalTransform;
         }
 
         private void RenderButton(Graphics graphics, Rectangle button, bool isHovered, string text)
