@@ -13,9 +13,19 @@ namespace WormholeGame.Core
         public bool ShowHUD { get; set; } = true; // Whether to show HUD during rendering
         private int levelTimer;
         
-        // Game world constants
+        // Game world dimensions - now dynamic based on settings
+        public int GameWidth => Settings.Instance.Resolution.Width;
+        public int GameHeight => Settings.Instance.Resolution.Height;
+        
+        // Legacy constants for backward compatibility
         public const int GAME_WIDTH = 800;
         public const int GAME_HEIGHT = 600;
+        
+        // Method to set score (for reinitialization)
+        public void SetScore(int score)
+        {
+            Score = score;
+        }
         
         public Game(int startingLevel = 1)
         {
@@ -28,7 +38,7 @@ namespace WormholeGame.Core
             IsRunning = true;
             levelTimer = 0;
             
-            Player = new Player(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+            Player = new Player(GameWidth / 2, GameHeight / 2);
             CurrentLevel = new Level(startingLevel);
             
             Console.WriteLine($"🎮 Game Started! Welcome to Level {startingLevel}!");
@@ -37,13 +47,13 @@ namespace WormholeGame.Core
         public void Update()
         {
             // Always update missiles (for explosion effects even after death)
-            CurrentLevel.UpdateMissiles(GAME_WIDTH, GAME_HEIGHT);
+            CurrentLevel.UpdateMissiles(GameWidth, GameHeight);
             
             // Only update game logic if player is alive
             if (!Player.IsDead())
             {
                 // Update wormholes and spawn new missiles
-                CurrentLevel.UpdateWormholes(GAME_WIDTH, GAME_HEIGHT);
+                CurrentLevel.UpdateWormholes(GameWidth, GameHeight);
                 
                 // Check collisions and handle damage
                 if (CheckCollisions())
@@ -91,7 +101,7 @@ namespace WormholeGame.Core
         
         public void MovePlayer(int deltaX, int deltaY)
         {
-            Player.Move(deltaX, deltaY, GAME_WIDTH, GAME_HEIGHT);
+            Player.Move(deltaX, deltaY, GameWidth, GameHeight);
         }
         
         public void Render(Graphics graphics)
@@ -138,14 +148,14 @@ namespace WormholeGame.Core
                 // Draw health bar
                 RenderHealthBar(graphics);
 
-                graphics.DrawString("WASD to move", font, textBrush, 10, GAME_HEIGHT - 30);
+                graphics.DrawString("WASD to move", font, textBrush, 10, GameHeight - 30);
 
                 // Draw danger multiplier in bottom right
                 int multiplier = CalculateDangerMultiplier();
                 string multiplierText = $"Danger Multiplier: x{multiplier}";
                 SizeF textSize = graphics.MeasureString(multiplierText, font);
                 graphics.DrawString(multiplierText, font, textBrush,
-                    GAME_WIDTH - textSize.Width - 10, GAME_HEIGHT - 30);
+                    GameWidth - textSize.Width - 10, GameHeight - 30);
             }
         }
         

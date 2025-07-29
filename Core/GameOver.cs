@@ -18,10 +18,10 @@ namespace WormholeGame.Core
             
             // Position restart button in center of screen
             int buttonWidth = 120;
-            int buttonHeight = 40;
+            int buttonHeight = 30; // Smaller for text-only
             restartButton = new Rectangle(
-                (Game.GAME_WIDTH - buttonWidth) / 2,
-                (Game.GAME_HEIGHT / 2) + 60,
+                (Settings.Instance.Resolution.Width - buttonWidth) / 2,
+                (Settings.Instance.Resolution.Height / 2) + 60,
                 buttonWidth,
                 buttonHeight
             );
@@ -42,6 +42,19 @@ namespace WormholeGame.Core
         public void Update()
         {
             // Nothing to update for now
+        }
+        
+        public void RecalculateLayout()
+        {
+            // Recalculate button position for new resolution
+            int buttonWidth = 120;
+            int buttonHeight = 30;
+            restartButton = new Rectangle(
+                (Settings.Instance.Resolution.Width - buttonWidth) / 2,
+                (Settings.Instance.Resolution.Height / 2) + 60,
+                buttonWidth,
+                buttonHeight
+            );
         }
         
         public void HandleMouseMove(int mouseX, int mouseY)
@@ -66,7 +79,7 @@ namespace WormholeGame.Core
             // Semi-transparent overlay
             using (Brush overlayBrush = new SolidBrush(Color.FromArgb(180, Color.Black)))
             {
-                graphics.FillRectangle(overlayBrush, 0, 0, Game.GAME_WIDTH, Game.GAME_HEIGHT);
+                graphics.FillRectangle(overlayBrush, 0, 0, Settings.Instance.Resolution.Width, Settings.Instance.Resolution.Height);
             }
             
             // Game Over title
@@ -75,8 +88,8 @@ namespace WormholeGame.Core
             {
                 string title = "GAME OVER";
                 SizeF titleSize = graphics.MeasureString(title, titleFont);
-                float titleX = (Game.GAME_WIDTH - titleSize.Width) / 2;
-                float titleY = Game.GAME_HEIGHT / 2 - 80;
+                float titleX = (Settings.Instance.Resolution.Width - titleSize.Width) / 2;
+                float titleY = Settings.Instance.Resolution.Height / 2 - 80;
                 graphics.DrawString(title, titleFont, titleBrush, titleX, titleY);
             }
             
@@ -86,21 +99,16 @@ namespace WormholeGame.Core
             {
                 string stats = $"Final Level: {finalLevel}\nFinal Score: {finalScore}";
                 SizeF statsSize = graphics.MeasureString(stats, statsFont);
-                float statsX = (Game.GAME_WIDTH - statsSize.Width) / 2;
-                float statsY = Game.GAME_HEIGHT / 2 - 20;
+                float statsX = (Settings.Instance.Resolution.Width - statsSize.Width) / 2;
+                float statsY = Settings.Instance.Resolution.Height / 2 - 20;
                 graphics.DrawString(stats, statsFont, statsBrush, statsX, statsY);
             }
             
-            // Restart button
-            Color buttonColor = isRestartHovered ? Color.LightGray : Color.Gray;
-            using (Brush buttonBrush = new SolidBrush(buttonColor))
-            using (Pen buttonPen = new Pen(Color.White, 2))
-            using (Font buttonFont = new Font("Arial", 12, FontStyle.Bold))
-            using (Brush textBrush = new SolidBrush(Color.Black))
+            // Restart button - modern text style
+            Color textColor = isRestartHovered ? Color.Gray : Color.White;
+            using (Font buttonFont = new Font("Arial", 16, FontStyle.Bold))
+            using (Brush textBrush = new SolidBrush(textColor))
             {
-                graphics.FillRectangle(buttonBrush, restartButton);
-                graphics.DrawRectangle(buttonPen, restartButton);
-                
                 string buttonText = "RESTART";
                 SizeF textSize = graphics.MeasureString(buttonText, buttonFont);
                 float textX = restartButton.X + (restartButton.Width - textSize.Width) / 2;

@@ -10,6 +10,7 @@ public partial class Form1 : Form
 {
     private Game game = null!;
     private Menu menu = null!;
+    private SettingsMenu settingsMenu = null!;
     private GameOver gameOver = null!;
     private InputManager inputManager = null!;
     private System.Windows.Forms.Timer gameTimer = null!;
@@ -24,7 +25,7 @@ public partial class Form1 : Form
     {
         // Set up the form
         this.Text = "Wormhole Game - Level 1";
-        this.Size = new Size(Game.GAME_WIDTH + 16, Game.GAME_HEIGHT + 39);
+        this.Size = new Size(Settings.Instance.Resolution.Width + 16, Settings.Instance.Resolution.Height + 39);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.FormBorderStyle = FormBorderStyle.FixedSingle;
         this.MaximizeBox = false;
@@ -38,6 +39,7 @@ public partial class Form1 : Form
         // Initialize game components
         game = new Game(3); // Start at level 3 for interesting menu background
         menu = new Menu();
+        settingsMenu = new SettingsMenu(this);
         gameOver = new GameOver();
         inputManager = new InputManager();
         
@@ -57,6 +59,13 @@ public partial class Form1 : Form
     
     private void GameLoop(object? sender, EventArgs e)
     {
+        // Check if settings have changed and need reinitialization
+        if (settingsMenu.IsDirty)
+        {
+            settingsMenu.ClearDirtyFlag();
+            ReinitializeGame();
+        }
+
         if (menu.IsVisible)
         {
             game.ShowHUD = false; // Hide HUD during menu
@@ -65,6 +74,15 @@ public partial class Form1 : Form
             
             // Update menu
             menu.Update();
+        }
+        else if (settingsMenu.IsVisible)
+        {
+            game.ShowHUD = false; // Hide HUD during settings
+            // Settings menu - still update game in background
+            game.Update();
+            
+            // Update settings menu
+            settingsMenu.Update();
         }
         else if (gameOver.IsVisible)
         {
@@ -107,6 +125,34 @@ public partial class Form1 : Form
         this.Text = "Wormhole Game - Level 1";
     }
     
+    private void ReinitializeGame()
+    {
+        // Preserve current game state
+        int currentLevel = game.CurrentLevel.Number;
+        int currentScore = game.Score;
+        bool wasPlayerDead = game.Player.IsDead();
+        
+        // Reinitialize the game with new settings
+        game = new Game(currentLevel);
+        game.SetScore(currentScore);
+        
+        // Reinitialize menus with updated form reference and recalculate layouts
+        menu = new Menu();
+        menu.RecalculateLayout();
+        settingsMenu = new SettingsMenu(this);
+        settingsMenu.RecalculateLayout();
+        gameOver = new GameOver();
+        gameOver.RecalculateLayout();
+        
+        // If player was dead, show game over again
+        if (wasPlayerDead)
+        {
+            gameOver.Show(currentLevel, currentScore);
+        }
+        
+        Console.WriteLine($"Game reinitialized with new settings! Level: {currentLevel}, Score: {currentScore}");
+    }
+    
     private void OnPaint(object? sender, PaintEventArgs e)
     {
         // Game renders itself
@@ -116,6 +162,12 @@ public partial class Form1 : Form
         if (menu.IsVisible)
         {
             menu.Render(e.Graphics);
+        }
+        
+        // Render settings menu on top if visible
+        if (settingsMenu.IsVisible)
+        {
+            settingsMenu.Render(e.Graphics);
         }
         
         // Render game over screen on top if visible
@@ -154,6 +206,10 @@ public partial class Form1 : Form
         {
             menu.HandleMouseMove(e.X, e.Y);
         }
+        else if (settingsMenu.IsVisible)
+        {
+            settingsMenu.HandleMouseMove(e.X, e.Y);
+        }
         else if (gameOver.IsVisible)
         {
             gameOver.HandleMouseMove(e.X, e.Y);
@@ -164,11 +220,28 @@ public partial class Form1 : Form
     {
         if (menu.IsVisible && e.Button == MouseButtons.Left)
         {
-            if (menu.HandleMouseClick(e.X, e.Y))
+            string result = menu.HandleMouseClick(e.X, e.Y);
+            if (result == "play")
             {
                 // Play button was clicked - start the game!
                 game.InitializeGame(1);
                 this.Text = "Wormhole Game - Level 1";
+            }
+            else if (result == "settings")
+            {
+                // Settings button was clicked - show settings menu
+                settingsMenu.Show();
+                menu.Hide();
+            }
+        }
+        else if (settingsMenu.IsVisible && e.Button == MouseButtons.Left)
+        {
+            if (settingsMenu.HandleMouseClick(e.X, e.Y))
+            {
+                // Back button was clicked - return to main menu
+                // Settings are applied automatically when changed
+                settingsMenu.Hide();
+                menu.Show();
             }
         }
         else if (gameOver.IsVisible && e.Button == MouseButtons.Left)
