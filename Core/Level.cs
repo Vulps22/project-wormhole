@@ -79,6 +79,56 @@ namespace WormholeGame.Core
             }
         }
         
+        public void UpdateMissiles(int gameWidth, int gameHeight)
+        {
+            // Update missiles only (for post-death explosion effects)
+            for (int i = Missiles.Count - 1; i >= 0; i--)
+            {
+                Missiles[i].Update(gameWidth, gameHeight);
+                if (Missiles[i].IsExpired())
+                {
+                    Missiles.RemoveAt(i);
+                }
+            }
+        }
+        
+        public void UpdateWormholes(int gameWidth, int gameHeight)
+        {
+            // Spawn wormholes only when needed (when current wormholes can't handle remaining missiles)
+            wormholeSpawnTimer++;
+            if (wormholeSpawnTimer > WormholeSpawnInterval && ShouldSpawnNewWormhole())
+            {
+                SpawnWormhole(gameWidth, gameHeight);
+                wormholeSpawnTimer = 0;
+                wormholesSpawned++;
+            }
+            
+            // Update wormholes and spawn missiles
+            for (int i = Wormholes.Count - 1; i >= 0; i--)
+            {
+                Wormholes[i].Update();
+                
+                // Check if wormhole should start expiring
+                if (Wormholes[i].ShouldExpire())
+                {
+                    Wormholes[i].StartExpiring();
+                }
+                
+                if (Wormholes[i].ShouldSpawnMissile() && CanSpawnMissile())
+                {
+                    SpawnMissile(Wormholes[i]);
+                    missilesSpawned++;
+                    Console.WriteLine($"Level {Number}: Total missiles spawned: {missilesSpawned}/{MaxMissiles}");
+                }
+                
+                if (Wormholes[i].IsExpired())
+                {
+                    Console.WriteLine($"Level {Number}: Wormhole expired after spawning {Wormholes[i].MissilesSpawned} missiles");
+                    Wormholes.RemoveAt(i);
+                }
+            }
+        }
+        
         public bool CanSpawnWormhole()
         {
             return wormholesSpawned < MaxWormholes;

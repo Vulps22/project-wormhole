@@ -10,14 +10,12 @@ namespace WormholeGame.Core
         public Level CurrentLevel { get; private set; } = null!;
         public int Score { get; private set; }
         public bool IsRunning { get; private set; }
-        
+        public bool ShowHUD { get; set; } = true; // Whether to show HUD during rendering
         private int levelTimer;
         
         // Game world constants
         public const int GAME_WIDTH = 800;
         public const int GAME_HEIGHT = 600;
-        
-        public bool GameJustEnded { get; private set; }
         
         public Game(int startingLevel = 1)
         {
@@ -28,7 +26,6 @@ namespace WormholeGame.Core
         {
             Score = 0;
             IsRunning = true;
-            GameJustEnded = false;
             levelTimer = 0;
             
             Player = new Player(GAME_WIDTH / 2, GAME_HEIGHT / 2);
@@ -39,62 +36,157 @@ namespace WormholeGame.Core
         
         public void Update()
         {
-            if (!IsRunning) return;
+            // Always update missiles (for explosion effects even after death)
+            CurrentLevel.UpdateMissiles(GAME_WIDTH, GAME_HEIGHT);
             
-            if(Player.Health <= 0)
+            // Only update game logic if player is alive
+            if (!Player.IsDead())
             {
-                GameOver();
-                return;
-            }
-
-            // Update current level
-            CurrentLevel.Update(GAME_WIDTH, GAME_HEIGHT);
-            
-            // Check collisions and handle damage
-            if (CheckCollisions())
-            {
-                Player.TakeDamage(10);
-                Console.WriteLine($"💥 Player hit! Health: {Player.Health}");
+                // Update wormholes and spawn new missiles
+                CurrentLevel.UpdateWormholes(GAME_WIDTH, GAME_HEIGHT);
                 
-                // Check if player died from this hit
-                if (Player.Health <= 0)
+                // Check collisions and handle damage
+                if (CheckCollisions())
                 {
-                    GameOver();
-                    return;
+                    Player.TakeDamage(100);
+                    Console.WriteLine($"💥 Player hit! Health: {Player.Health}");
+                    
+                    // If player just died, spawn explosion missiles
+                    if (Player.IsDead())
+                    {
+                        SpawnExplosionMissiles();
+                        Console.WriteLine($"💀 GAME OVER! Final Level: {CurrentLevel.Number}, Score: {Score}");
+                    }
+                }
+
+                if (CurrentLevel.IsLevelComplete(levelTimer % 60 == 0))
+                {
+                    AdvanceToNextLevel();
+                }
+                
+                // Award survival points smoothly with danger multiplier!
+                if (levelTimer % 6 == 0)
+                {
+                    int multiplier = CalculateDangerMultiplier();
+                    Score += multiplier;
+                    
+                    if (multiplier > 1)
+                    {
+                        Console.WriteLine($"🔥 DANGER BONUS! Multiplier: x{multiplier}");
+                    }
+                }
+                
+                // Output debug info (less frequently)
+                if (levelTimer % 60 == 0) // Every second
+                {
+                    Console.WriteLine($"🎯 Level {CurrentLevel.Number} | " +
+                                    $"Wormholes: {CurrentLevel.Wormholes.Count} | " +
+                                    $"Missiles: {CurrentLevel.Missiles.Count} | " +
+                                    $"Time: {levelTimer / 60}s");
                 }
             }
-
-            if (CurrentLevel.IsLevelComplete(levelTimer % 60 == 0))
-            {
-                AdvanceToNextLevel();
-            }
             
-            // Award survival points smoothly with danger multiplier!
-            if (levelTimer % 6 == 0)
-            {
-                int multiplier = CalculateDangerMultiplier();
-                Score += multiplier;
-                
-                if (multiplier > 1)
-                {
-                    Console.WriteLine($"🔥 DANGER BONUS! Multiplier: x{multiplier}");
-                }
-            }
-            
-            // Output debug info (less frequently)
-            if (levelTimer % 60 == 0) // Every second
-            {
-                Console.WriteLine($"🎯 Level {CurrentLevel.Number} | " +
-                                $"Wormholes: {CurrentLevel.Wormholes.Count} | " +
-                                $"Missiles: {CurrentLevel.Missiles.Count} | " +
-                                $"Time: {levelTimer / 60}s");
-            }
             levelTimer++;
         }
         
         public void MovePlayer(int deltaX, int deltaY)
         {
             Player.Move(deltaX, deltaY, GAME_WIDTH, GAME_HEIGHT);
+        }
+        
+        public void Render(Graphics graphics)
+        {
+            // Clear screen
+            graphics.Clear(Color.Black);
+            
+            // Render player
+            if (!Player.IsDead())
+            {
+                Player.Render(graphics);
+            }
+            
+            // Render wormholes
+            foreach (var wormhole in CurrentLevel.Wormholes)
+            {
+                wormhole.Render(graphics);
+            }
+            
+            // Render missiles
+            foreach (var missile in CurrentLevel.Missiles)
+            {
+                missile.Render(graphics);
+            }
+            
+            if (ShowHUD)
+            {
+                RenderHUD(graphics);
+            }
+        }
+        
+        private void RenderHUD(Graphics graphics)
+        {
+            using (Brush textBrush = new SolidBrush(Color.White))
+            using (Font font = new Font("Arial", 12))
+            {
+                graphics.DrawString($"Level: {CurrentLevel.Number}", font, textBrush, 10, 10);
+                graphics.DrawString($"Score: {Score:N0}", font, textBrush, 150, 10);
+                graphics.DrawString($"Missiles: {CurrentLevel.Missiles.Count}/{CurrentLevel.MaxMissiles}",
+                    font, textBrush, 10, 30);
+                graphics.DrawString($"Wormholes: {CurrentLevel.Wormholes.Count}/{CurrentLevel.MaxWormholes}",
+                    font, textBrush, 10, 50);
+
+                // Draw health bar
+                RenderHealthBar(graphics);
+
+                graphics.DrawString("WASD to move", font, textBrush, 10, GAME_HEIGHT - 30);
+
+                // Draw danger multiplier in bottom right
+                int multiplier = CalculateDangerMultiplier();
+                string multiplierText = $"Danger Multiplier: x{multiplier}";
+                SizeF textSize = graphics.MeasureString(multiplierText, font);
+                graphics.DrawString(multiplierText, font, textBrush,
+                    GAME_WIDTH - textSize.Width - 10, GAME_HEIGHT - 30);
+            }
+        }
+        
+        private void RenderHealthBar(Graphics graphics)
+        {
+            int barWidth = 200;
+            int barHeight = 20;
+            int barX = 10;
+            int barY = 70;
+
+            // Background
+            using (Brush backgroundBrush = new SolidBrush(Color.DarkRed))
+            {
+                graphics.FillRectangle(backgroundBrush, barX, barY, barWidth, barHeight);
+            }
+
+            // Health fill
+            float healthPercentage = (float)Player.Health / Player.MaxHealth;
+            int healthWidth = (int)(barWidth * healthPercentage);
+            
+            Color healthColor = healthPercentage > 0.6f ? Color.Green :
+                               healthPercentage > 0.3f ? Color.Yellow : Color.Red;
+            
+            using (Brush healthBrush = new SolidBrush(healthColor))
+            {
+                graphics.FillRectangle(healthBrush, barX, barY, healthWidth, barHeight);
+            }
+
+            // Border
+            using (Pen borderPen = new Pen(Color.White, 2))
+            {
+                graphics.DrawRectangle(borderPen, barX, barY, barWidth, barHeight);
+            }
+
+            // Health text
+            using (Font font = new Font("Arial", 10))
+            using (Brush textBrush = new SolidBrush(Color.White))
+            {
+                string healthText = $"Health: {Player.Health}/{Player.MaxHealth}";
+                graphics.DrawString(healthText, font, textBrush, barX + 5, barY + 2);
+            }
         }
         
         public bool CheckCollisions()
@@ -126,16 +218,29 @@ namespace WormholeGame.Core
             return false;
         }
         
-        public void GameOver()
+        private void SpawnExplosionMissiles()
         {
-            IsRunning = false;
-            GameJustEnded = true;
-            Console.WriteLine($"💀 GAME OVER! Final Level: {CurrentLevel.Number}, Score: {Score}");
-        }
-        
-        public void AcknowledgeGameOver()
-        {
-            GameJustEnded = false;
+            Random random = new Random();
+            int explosionMissiles = 10;
+            
+            for (int i = 0; i < explosionMissiles; i++)
+            {
+                // Calculate random direction (angle in radians)
+                double angle = random.NextDouble() * 2 * Math.PI;
+                
+                // Random speed between 3 and 8 for variety
+                double speed = 3 + random.NextDouble() * 5;
+                
+                // Calculate velocity components
+                double velX = Math.Cos(angle) * speed;
+                double velY = Math.Sin(angle) * speed;
+                
+                // Create missile at player position
+                Missile explosionMissile = new Missile(Player.X, Player.Y, velX, velY);
+                CurrentLevel.Missiles.Add(explosionMissile);
+            }
+            
+            Console.WriteLine($"💥 Player exploded into {explosionMissiles} missiles!");
         }
         
         public void RestartGame()

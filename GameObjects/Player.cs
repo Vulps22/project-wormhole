@@ -44,6 +44,11 @@ namespace WormholeGame.GameObjects
             }
         }
         
+        public bool IsDead()
+        {
+            return Health <= 0;
+        }
+        
         public void Render(Graphics graphics)
         {
             // Draw player as white square
