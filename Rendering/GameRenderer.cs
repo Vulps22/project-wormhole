@@ -31,6 +31,7 @@ namespace WormholeGame.Rendering
             using (Font font = new Font("Arial", 12))
             {
                 graphics.DrawString($"Level: {game.CurrentLevel.Number}", font, textBrush, 10, 10);
+                graphics.DrawString($"Score: {game.Score:N0}", font, textBrush, 150, 10);
                 graphics.DrawString($"Missiles: {game.CurrentLevel.Missiles.Count}/{game.CurrentLevel.MaxMissiles}", 
                     font, textBrush, 10, 30);
                 graphics.DrawString($"Wormholes: {game.CurrentLevel.Wormholes.Count}/{game.CurrentLevel.MaxWormholes}", 
@@ -40,6 +41,12 @@ namespace WormholeGame.Rendering
                 DrawHealthBar(graphics, game.Player.Health, game.Player.MaxHealth);
                 
                 graphics.DrawString("WASD to move", font, textBrush, 10, Game.GAME_HEIGHT - 30);
+                
+                // Draw danger multiplier in bottom right
+                string multiplierText = $"Danger Multiplier: x{CalculateDangerMultiplier(game)}";
+                SizeF textSize = graphics.MeasureString(multiplierText, font);
+                graphics.DrawString(multiplierText, font, textBrush, 
+                    Game.GAME_WIDTH - textSize.Width - 10, Game.GAME_HEIGHT - 30);
             }
         }
         
@@ -84,6 +91,34 @@ namespace WormholeGame.Rendering
                 string healthText = $"Health: {currentHealth}/{maxHealth}";
                 graphics.DrawString(healthText, font, textBrush, barX + barWidth + 10, barY + 2);
             }
+        }
+        
+        private int CalculateDangerMultiplier(Game game)
+        {
+            if (game.CurrentLevel.Missiles.Count == 0) return 1; // No danger = base points
+            
+            int dangerousProximities = 0;
+            const int CLOSE_RANGE = 60;     // Very close - 3x multiplier zone
+            const int MEDIUM_RANGE = 120;   // Medium close - 2x multiplier zone
+            
+            foreach (var missile in game.CurrentLevel.Missiles)
+            {
+                double distance = Math.Sqrt(
+                    Math.Pow(game.Player.X - missile.X, 2) + 
+                    Math.Pow(game.Player.Y - missile.Y, 2));
+                
+                if (distance <= CLOSE_RANGE)
+                {
+                    dangerousProximities += 3; // Very dangerous!
+                }
+                else if (distance <= MEDIUM_RANGE)
+                {
+                    dangerousProximities += 1; // Somewhat dangerous
+                }
+            }
+            
+            // Cap the multiplier at reasonable levels
+            return Math.Min(1 + dangerousProximities, 10);
         }
     }
 }

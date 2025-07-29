@@ -69,6 +69,18 @@ namespace WormholeGame.Core
                 AdvanceToNextLevel();
             }
             
+            // Award survival points smoothly with danger multiplier!
+            if (levelTimer % 6 == 0)
+            {
+                int multiplier = CalculateDangerMultiplier();
+                Score += multiplier;
+                
+                if (multiplier > 1)
+                {
+                    Console.WriteLine($"🔥 DANGER BONUS! Multiplier: x{multiplier}");
+                }
+            }
+            
             // Output debug info (less frequently)
             if (levelTimer % 60 == 0) // Every second
             {
@@ -145,6 +157,34 @@ namespace WormholeGame.Core
         public bool CanContinuePlaying()
         {
             return IsRunning;
+        }
+        
+        private int CalculateDangerMultiplier()
+        {
+            if (CurrentLevel.Missiles.Count == 0) return 1; // No danger = base points
+            
+            int dangerousProximities = 0;
+            const int CLOSE_RANGE = 60;     // Very close - 3x multiplier zone
+            const int MEDIUM_RANGE = 120;   // Medium close - 2x multiplier zone
+            
+            foreach (var missile in CurrentLevel.Missiles)
+            {
+                double distance = Math.Sqrt(
+                    Math.Pow(Player.X - missile.X, 2) + 
+                    Math.Pow(Player.Y - missile.Y, 2));
+                
+                if (distance <= CLOSE_RANGE)
+                {
+                    dangerousProximities += 3; // Very dangerous!
+                }
+                else if (distance <= MEDIUM_RANGE)
+                {
+                    dangerousProximities += 1; // Somewhat dangerous
+                }
+            }
+            
+            // Cap the multiplier at reasonable levels
+            return Math.Min(1 + dangerousProximities, 10);
         }
     }
 }
