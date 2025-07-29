@@ -17,6 +17,8 @@ namespace WormholeGame.Core
         public const int GAME_WIDTH = 800;
         public const int GAME_HEIGHT = 600;
         
+        public bool GameJustEnded { get; private set; }
+        
         public Game()
         {
             InitializeGame();
@@ -26,6 +28,7 @@ namespace WormholeGame.Core
         {
             Score = 0;
             IsRunning = true;
+            GameJustEnded = false;
             levelTimer = 0;
             
             Player = new Player(GAME_WIDTH / 2, GAME_HEIGHT / 2);
@@ -38,8 +41,28 @@ namespace WormholeGame.Core
         {
             if (!IsRunning) return;
             
+            if(Player.Health <= 0)
+            {
+                GameOver();
+                return;
+            }
+
             // Update current level
             CurrentLevel.Update(GAME_WIDTH, GAME_HEIGHT);
+            
+            // Check collisions and handle damage
+            if (CheckCollisions())
+            {
+                Player.TakeDamage(10);
+                Console.WriteLine($"💥 Player hit! Health: {Player.Health}");
+                
+                // Check if player died from this hit
+                if (Player.Health <= 0)
+                {
+                    GameOver();
+                    return;
+                }
+            }
 
             if (CurrentLevel.IsLevelComplete(levelTimer % 60 == 0))
             {
@@ -89,7 +112,13 @@ namespace WormholeGame.Core
         public void GameOver()
         {
             IsRunning = false;
+            GameJustEnded = true;
             Console.WriteLine($"💀 GAME OVER! Final Level: {CurrentLevel.Number}, Score: {Score}");
+        }
+        
+        public void AcknowledgeGameOver()
+        {
+            GameJustEnded = false;
         }
         
         public void RestartGame()

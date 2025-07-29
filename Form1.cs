@@ -54,21 +54,21 @@ public partial class Form1 : Form
     
     private void GameLoop(object? sender, EventArgs e)
     {
-        if (!game.CanContinuePlaying()) return;
-        
         // Handle input
         var (deltaX, deltaY) = inputManager.GetMovementInput(Player.DEFAULT_SPEED);
         game.MovePlayer(deltaX, deltaY);
         
-        // Update game
+        // Update game (includes collision detection)
         game.Update();
         
-        // Check collisions
-        if (game.CheckCollisions())
+        // React to game state changes
+        if (game.GameJustEnded)
         {
-            GameOver();
+            HandleGameOver();
             return;
         }
+        
+        if (!game.CanContinuePlaying()) return;
         
         // Update UI title
         this.Text = $"Wormhole Game - Level {game.CurrentLevel.Number}";
@@ -77,10 +77,10 @@ public partial class Form1 : Form
         this.Invalidate();
     }
     
-    private void GameOver()
+    private void HandleGameOver()
     {
-        game.GameOver();
         gameTimer.Stop();
+        game.AcknowledgeGameOver();
         MessageBox.Show($"Game Over! You reached level {game.CurrentLevel.Number}\nPress OK to restart.", 
                        "Game Over", MessageBoxButtons.OK);
         RestartGame();

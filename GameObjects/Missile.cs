@@ -18,7 +18,7 @@ namespace WormholeGame.GameObjects
         // Missile constants
         public const int DEFAULT_SIZE = 15;
         public const int DEFAULT_SPEED = 6;
-        public const int MAX_BOUNCES = 1;
+        public const int MAX_BOUNCES = 8;
         
         public Missile(int x, int y, int size, double velX, double velY)
         {

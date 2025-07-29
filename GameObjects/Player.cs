@@ -13,6 +13,7 @@ namespace WormholeGame.GameObjects
         public const int DEFAULT_SIZE = 20;
         public const int DEFAULT_SPEED = 5;
         
+        public int Health { get; private set; } = 100; // Player health, can be used for damage logic
         public Player(int x, int y, int size = DEFAULT_SIZE)
         {
             X = x;
@@ -32,13 +33,22 @@ namespace WormholeGame.GameObjects
             Y = y;
         }
         
+        public void TakeDamage(int amount)
+        {
+            Health = Math.Max(0, Health - amount);
+            if (Health <= 0)
+            {
+                Console.WriteLine("💥 Player has been destroyed!");
+            }
+        }
+        
         public void Render(Graphics graphics)
         {
             // Draw player as white square
             using (Brush brush = new SolidBrush(Color.White))
             {
-                graphics.FillRectangle(brush, 
-                    X - Size/2, Y - Size/2, 
+                graphics.FillRectangle(brush,
+                    X - Size / 2, Y - Size / 2,
                     Size, Size);
             }
         }
