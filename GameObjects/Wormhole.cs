@@ -8,15 +8,16 @@ namespace WormholeGame.GameObjects
         public int X { get; private set; }
         public int Y { get; private set; }
         public int Size { get; private set; }
+        public int MissilesSpawned => missilesSpawned; // Expose for logic calculations
         
-        private int lifeTime;
         private int missileSpawnTimer;
         private int missilesSpawned;
         private Random random;
+        private bool shouldExpire;
+        private int originalSize;
         
         // Wormhole constants - each object knows its own properties!
         public const int DEFAULT_SIZE = 100;
-        public const int LIFETIME_FRAMES = 300; // 5 seconds at 60 FPS
         public const int MISSILE_SPAWN_INTERVAL = 60; // Every second
         public const int MAX_MISSILES_PER_WORMHOLE = 5;
         
@@ -25,16 +26,33 @@ namespace WormholeGame.GameObjects
             X = x;
             Y = y;
             Size = size;
-            lifeTime = LIFETIME_FRAMES;
+            originalSize = size;
             missileSpawnTimer = 0;
             missilesSpawned = 0;
+            shouldExpire = false;
             random = new Random();
         }
         
         public void Update()
         {
-            lifeTime--;
             missileSpawnTimer++;
+            
+            // If we should expire, start shrinking
+            if (shouldExpire)
+            {
+                Size = Math.Max(0, Size - 2); // Shrink by 2 pixels per frame
+            }
+        }
+        
+        public bool ShouldExpire()
+        {
+            // Expire when we've spawned all our missiles
+            return missilesSpawned >= MAX_MISSILES_PER_WORMHOLE;
+        }
+        
+        public void StartExpiring()
+        {
+            shouldExpire = true;
         }
         
         public bool ShouldSpawnMissile()
@@ -51,7 +69,7 @@ namespace WormholeGame.GameObjects
         
         public bool IsExpired()
         {
-            return lifeTime <= 0;
+            return Size <= 0; // Only truly expired when size reaches 0
         }
         
         public void Render(Graphics graphics)

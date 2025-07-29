@@ -9,7 +9,7 @@ namespace WormholeGame;
 
 public partial class Form1 : Form
 {
-    private GameState gameState = null!;
+    private Game game = null!;
     private InputManager inputManager = null!;
     private GameRenderer renderer = null!;
     private System.Windows.Forms.Timer gameTimer = null!;
@@ -24,7 +24,7 @@ public partial class Form1 : Form
     {
         // Set up the form
         this.Text = "Wormhole Game - Level 1";
-        this.Size = new Size(GameState.GAME_WIDTH + 16, GameState.GAME_HEIGHT + 39);
+        this.Size = new Size(Game.GAME_WIDTH + 16, Game.GAME_HEIGHT + 39);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.FormBorderStyle = FormBorderStyle.FixedSingle;
         this.MaximizeBox = false;
@@ -36,7 +36,7 @@ public partial class Form1 : Form
                      ControlStyles.DoubleBuffer, true);
         
         // Initialize game components
-        gameState = new GameState();
+        game = new Game();
         inputManager = new InputManager();
         renderer = new GameRenderer();
         
@@ -54,24 +54,24 @@ public partial class Form1 : Form
     
     private void GameLoop(object? sender, EventArgs e)
     {
-        if (!gameState.IsRunning) return;
+        if (!game.CanContinuePlaying()) return;
         
         // Handle input
         var (deltaX, deltaY) = inputManager.GetMovementInput(Player.DEFAULT_SPEED);
-        gameState.MovePlayer(deltaX, deltaY);
+        game.MovePlayer(deltaX, deltaY);
         
-        // Update game state
-        gameState.UpdateGame();
+        // Update game
+        game.Update();
         
         // Check collisions
-        if (gameState.CheckCollisions())
+        if (game.CheckCollisions())
         {
             GameOver();
             return;
         }
         
         // Update UI title
-        this.Text = $"Wormhole Game - Level {gameState.Level}";
+        this.Text = $"Wormhole Game - Level {game.CurrentLevel.Number}";
         
         // Redraw
         this.Invalidate();
@@ -79,16 +79,16 @@ public partial class Form1 : Form
     
     private void GameOver()
     {
-        gameState.GameOver();
+        game.GameOver();
         gameTimer.Stop();
-        MessageBox.Show($"Game Over! You reached level {gameState.Level}\nPress OK to restart.", 
+        MessageBox.Show($"Game Over! You reached level {game.CurrentLevel.Number}\nPress OK to restart.", 
                        "Game Over", MessageBoxButtons.OK);
         RestartGame();
     }
     
     private void RestartGame()
     {
-        gameState.RestartGame();
+        game.RestartGame();
         inputManager.Clear();
         this.Text = "Wormhole Game - Level 1";
         gameTimer.Start();
@@ -96,7 +96,7 @@ public partial class Form1 : Form
     
     private void OnPaint(object? sender, PaintEventArgs e)
     {
-        renderer.Render(e.Graphics, gameState);
+        renderer.Render(e.Graphics, game);
     }
     
     private void OnKeyDown(object? sender, KeyEventArgs e)
@@ -107,7 +107,7 @@ public partial class Form1 : Form
         {
             this.Close();
         }
-        if (e.KeyCode == Keys.R && !gameState.IsRunning)
+        if (e.KeyCode == Keys.R && !game.CanContinuePlaying())
         {
             RestartGame();
         }
