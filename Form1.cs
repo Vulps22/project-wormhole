@@ -10,6 +10,7 @@ namespace WormholeGame;
 public partial class Form1 : Form
 {
     private Game game = null!;
+    private Menu menu = null!;
     private InputManager inputManager = null!;
     private GameRenderer renderer = null!;
     private System.Windows.Forms.Timer gameTimer = null!;
@@ -36,7 +37,8 @@ public partial class Form1 : Form
                      ControlStyles.DoubleBuffer, true);
         
         // Initialize game components
-        game = new Game();
+        game = new Game(3); // Start at level 3 for interesting menu background
+        menu = new Menu();
         inputManager = new InputManager();
         renderer = new GameRenderer();
         
@@ -50,28 +52,41 @@ public partial class Form1 : Form
         this.Paint += OnPaint;
         this.KeyDown += OnKeyDown;
         this.KeyUp += OnKeyUp;
+        this.MouseMove += OnMouseMove;
+        this.MouseClick += OnMouseClick;
     }
     
     private void GameLoop(object? sender, EventArgs e)
     {
-        // Handle input
-        var (deltaX, deltaY) = inputManager.GetMovementInput(Player.DEFAULT_SPEED);
-        game.MovePlayer(deltaX, deltaY);
-        
-        // Update game (includes collision detection)
-        game.Update();
-        
-        // React to game state changes
-        if (game.GameJustEnded)
+        if (menu.IsVisible)
         {
-            HandleGameOver();
-            return;
+            // Update game (but no player input due to menu)
+            game.Update();
+            
+            // Update menu
+            menu.Update();
         }
-        
-        if (!game.CanContinuePlaying()) return;
-        
-        // Update UI title
-        this.Text = $"Wormhole Game - Level {game.CurrentLevel.Number}";
+        else
+        {
+            // Handle input for actual game
+            var (deltaX, deltaY) = inputManager.GetMovementInput(Player.DEFAULT_SPEED);
+            game.MovePlayer(deltaX, deltaY);
+            
+            // Update game (includes collision detection)
+            game.Update();
+            
+            // React to game state changes
+            if (game.GameJustEnded)
+            {
+                HandleGameOver();
+                return;
+            }
+            
+            if (!game.CanContinuePlaying()) return;
+            
+            // Update UI title
+            this.Text = $"Wormhole Game - Level {game.CurrentLevel.Number}";
+        }
         
         // Redraw
         this.Invalidate();
@@ -96,11 +111,20 @@ public partial class Form1 : Form
     
     private void OnPaint(object? sender, PaintEventArgs e)
     {
-        renderer.Render(e.Graphics, game);
+        // Always render the same game instance
+        renderer.Render(e.Graphics, game, menu.IsVisible);
+        
+        // Render menu on top if visible
+        if (menu.IsVisible)
+        {
+            menu.Render(e.Graphics);
+        }
     }
     
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
+        if (menu.IsVisible) return; // Ignore input when menu is visible
+        
         inputManager.OnKeyDown(e.KeyCode);
         
         if (e.KeyCode == Keys.Escape)
@@ -115,7 +139,30 @@ public partial class Form1 : Form
     
     private void OnKeyUp(object? sender, KeyEventArgs e)
     {
+        if (menu.IsVisible) return; // Ignore input when menu is visible
+        
         inputManager.OnKeyUp(e.KeyCode);
+    }
+    
+    private void OnMouseMove(object? sender, MouseEventArgs e)
+    {
+        if (menu.IsVisible)
+        {
+            menu.HandleMouseMove(e.X, e.Y);
+        }
+    }
+    
+    private void OnMouseClick(object? sender, MouseEventArgs e)
+    {
+        if (menu.IsVisible && e.Button == MouseButtons.Left)
+        {
+            if (menu.HandleMouseClick(e.X, e.Y))
+            {
+                // Play button was clicked - start the game!
+                game.InitializeGame(1);
+                this.Text = "Wormhole Game - Level 1";
+            }
+        }
     }
 }
 

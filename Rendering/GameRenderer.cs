@@ -6,7 +6,7 @@ namespace WormholeGame.Rendering
 {
     public class GameRenderer
     {
-        public void Render(Graphics graphics, Game game)
+        public void Render(Graphics graphics, Game game, bool isMenuVisible)
         {
             // Clear screen
             graphics.Clear(Color.Black);
@@ -25,28 +25,31 @@ namespace WormholeGame.Rendering
             {
                 missile.Render(graphics);
             }
-            
-            // Draw UI
-            using (Brush textBrush = new SolidBrush(Color.White))
-            using (Font font = new Font("Arial", 12))
+            if (!isMenuVisible)
             {
-                graphics.DrawString($"Level: {game.CurrentLevel.Number}", font, textBrush, 10, 10);
-                graphics.DrawString($"Score: {game.Score:N0}", font, textBrush, 150, 10);
-                graphics.DrawString($"Missiles: {game.CurrentLevel.Missiles.Count}/{game.CurrentLevel.MaxMissiles}", 
-                    font, textBrush, 10, 30);
-                graphics.DrawString($"Wormholes: {game.CurrentLevel.Wormholes.Count}/{game.CurrentLevel.MaxWormholes}", 
-                    font, textBrush, 10, 50);
-                
-                // Draw health bar
-                DrawHealthBar(graphics, game.Player.Health, game.Player.MaxHealth);
-                
-                graphics.DrawString("WASD to move", font, textBrush, 10, Game.GAME_HEIGHT - 30);
-                
-                // Draw danger multiplier in bottom right
-                string multiplierText = $"Danger Multiplier: x{CalculateDangerMultiplier(game)}";
-                SizeF textSize = graphics.MeasureString(multiplierText, font);
-                graphics.DrawString(multiplierText, font, textBrush, 
-                    Game.GAME_WIDTH - textSize.Width - 10, Game.GAME_HEIGHT - 30);
+
+                // Draw UI
+                using (Brush textBrush = new SolidBrush(Color.White))
+                using (Font font = new Font("Arial", 12))
+                {
+                    graphics.DrawString($"Level: {game.CurrentLevel.Number}", font, textBrush, 10, 10);
+                    graphics.DrawString($"Score: {game.Score:N0}", font, textBrush, 150, 10);
+                    graphics.DrawString($"Missiles: {game.CurrentLevel.Missiles.Count}/{game.CurrentLevel.MaxMissiles}",
+                        font, textBrush, 10, 30);
+                    graphics.DrawString($"Wormholes: {game.CurrentLevel.Wormholes.Count}/{game.CurrentLevel.MaxWormholes}",
+                        font, textBrush, 10, 50);
+
+                    // Draw health bar
+                    DrawHealthBar(graphics, game.Player.Health, game.Player.MaxHealth);
+
+                    graphics.DrawString("WASD to move", font, textBrush, 10, Game.GAME_HEIGHT - 30);
+
+                    // Draw danger multiplier in bottom right
+                    string multiplierText = $"Danger Multiplier: x{CalculateDangerMultiplier(game)}";
+                    SizeF textSize = graphics.MeasureString(multiplierText, font);
+                    graphics.DrawString(multiplierText, font, textBrush,
+                        Game.GAME_WIDTH - textSize.Width - 10, Game.GAME_HEIGHT - 30);
+                }
             }
         }
         

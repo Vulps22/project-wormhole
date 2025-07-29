@@ -19,12 +19,12 @@ namespace WormholeGame.Core
         
         public bool GameJustEnded { get; private set; }
         
-        public Game()
+        public Game(int startingLevel = 1)
         {
-            InitializeGame();
+            InitializeGame(startingLevel);
         }
         
-        public void InitializeGame()
+        public void InitializeGame(int startingLevel = 1)
         {
             Score = 0;
             IsRunning = true;
@@ -32,9 +32,9 @@ namespace WormholeGame.Core
             levelTimer = 0;
             
             Player = new Player(GAME_WIDTH / 2, GAME_HEIGHT / 2);
-            CurrentLevel = new Level(1);
+            CurrentLevel = new Level(startingLevel);
             
-            Console.WriteLine("🎮 Game Started! Welcome to Wormhole!");
+            Console.WriteLine($"🎮 Game Started! Welcome to Level {startingLevel}!");
         }
         
         public void Update()
@@ -140,7 +140,7 @@ namespace WormholeGame.Core
         
         public void RestartGame()
         {
-            InitializeGame();
+            InitializeGame(1);
         }
         
         private void AdvanceToNextLevel()
