@@ -12,9 +12,9 @@ namespace WormholeGame.Core
         public List<string> Credits { get; set; } = new List<string>();
     }
 
-    public class CreditsMenu
+    public class CreditsMenu : Menu
     {
-        public bool IsVisible { get; private set; }
+        private MenuManager menuManager;
         private Rectangle backButton;
         private bool isBackHovered;
         private List<CreditSection> creditSections = new List<CreditSection>();
@@ -22,8 +22,9 @@ namespace WormholeGame.Core
         private const int LINE_HEIGHT = 25;
         private const int SECTION_SPACING = 40;
 
-        public CreditsMenu()
+        public CreditsMenu(MenuManager manager)
         {
+            this.menuManager = manager;
             IsVisible = false;
             LoadCredits();
             SetupButtons();
@@ -97,28 +98,23 @@ namespace WormholeGame.Core
             Console.WriteLine($"Loaded {creditSections.Count} credit sections");
         }
 
-        public void Show()
+        public override void Show()
         {
-            IsVisible = true;
+            base.Show();
             scrollOffset = 0; // Reset scroll when showing
         }
 
-        public void Hide()
-        {
-            IsVisible = false;
-        }
-
-        public void Update()
+        public override void Update()
         {
             // Handle scrolling if needed
         }
 
-        public void HandleMouseMove(int mouseX, int mouseY)
+        public override void HandleMouseMove(int mouseX, int mouseY)
         {
             isBackHovered = backButton.Contains(mouseX, mouseY);
         }
 
-        public void HandleMouseMove(int mouseX, int mouseY, Form form)
+        public override void HandleMouseMove(int mouseX, int mouseY, Form form)
         {
             // Scale mouse coordinates back to game resolution
             var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
@@ -128,18 +124,18 @@ namespace WormholeGame.Core
             HandleMouseMove(scaledX, scaledY);
         }
 
-        public bool HandleMouseClick(int mouseX, int mouseY)
+        public override bool HandleMouseClick(int mouseX, int mouseY)
         {
             if (backButton.Contains(mouseX, mouseY))
             {
-                Hide();
-                return true; // Back to settings menu
+                menuManager.ShowMainMenu();
+                return true; // Back to main menu
             }
 
             return false;
         }
 
-        public bool HandleMouseClick(int mouseX, int mouseY, Form form)
+        public override bool HandleMouseClick(int mouseX, int mouseY, Form form)
         {
             // Scale mouse coordinates back to game resolution
             var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
@@ -149,12 +145,12 @@ namespace WormholeGame.Core
             return HandleMouseClick(scaledX, scaledY);
         }
 
-        public void RecalculateLayout()
+        public override void RecalculateLayout()
         {
             SetupButtons();
         }
 
-        public void Render(Graphics graphics)
+        public override void Render(Graphics graphics)
         {
             if (!IsVisible) return;
 
@@ -211,7 +207,7 @@ namespace WormholeGame.Core
             RenderButton(graphics, backButton, isBackHovered, "BACK");
         }
 
-        public void Render(Graphics graphics, Form form)
+        public override void Render(Graphics graphics, Form form)
         {
             if (!IsVisible) return;
             

@@ -3,18 +3,19 @@ using System.Drawing;
 
 namespace WormholeGame.Core
 {
-    public class GameOver
+    public class GameOverMenu : Menu
     {
-        public bool IsVisible { get; private set; }
-        
+        private MenuManager menuManager;
         private Rectangle restartButton;
         private bool isRestartHovered;
         private int finalLevel;
         private int finalScore;
         
-        public GameOver()
+        public GameOverMenu(MenuManager manager, int level, int score)
         {
-            IsVisible = false;
+            this.menuManager = manager;
+            this.finalLevel = level;
+            this.finalScore = score;
             
             // Position restart button in center of screen
             int buttonWidth = 120;
@@ -27,24 +28,12 @@ namespace WormholeGame.Core
             );
         }
         
-        public void Show(int level, int score)
-        {
-            IsVisible = true;
-            finalLevel = level;
-            finalScore = score;
-        }
-        
-        public void Hide()
-        {
-            IsVisible = false;
-        }
-        
-        public void Update()
+        public override void Update()
         {
             // Nothing to update for now
         }
         
-        public void RecalculateLayout()
+        public override void RecalculateLayout()
         {
             // Recalculate button position for new resolution
             int buttonWidth = 120;
@@ -57,22 +46,22 @@ namespace WormholeGame.Core
             );
         }
         
-        public void HandleMouseMove(int mouseX, int mouseY)
+        public override void HandleMouseMove(int mouseX, int mouseY)
         {
             isRestartHovered = restartButton.Contains(mouseX, mouseY);
         }
         
-        public bool HandleMouseClick(int mouseX, int mouseY)
+        public override bool HandleMouseClick(int mouseX, int mouseY)
         {
             if (restartButton.Contains(mouseX, mouseY))
             {
-                Hide();
+                menuManager.StartGame();
                 return true; // Restart button clicked
             }
             return false;
         }
         
-        public void Render(Graphics graphics)
+        public override void Render(Graphics graphics)
         {
             if (!IsVisible) return;
             
@@ -117,7 +106,7 @@ namespace WormholeGame.Core
             }
         }
         
-        public void Render(Graphics graphics, Form form)
+        public override void Render(Graphics graphics, Form form)
         {
             if (!IsVisible) return;
             
@@ -137,7 +126,7 @@ namespace WormholeGame.Core
             graphics.Transform = originalTransform;
         }
         
-        public void HandleMouseMove(int mouseX, int mouseY, Form form)
+        public override void HandleMouseMove(int mouseX, int mouseY, Form form)
         {
             // Scale mouse coordinates back to game resolution
             var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
@@ -147,7 +136,7 @@ namespace WormholeGame.Core
             HandleMouseMove(scaledX, scaledY);
         }
         
-        public bool HandleMouseClick(int mouseX, int mouseY, Form form)
+        public override bool HandleMouseClick(int mouseX, int mouseY, Form form)
         {
             // Scale mouse coordinates back to game resolution
             var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
