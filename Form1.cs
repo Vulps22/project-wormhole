@@ -11,6 +11,7 @@ public partial class Form1 : Form
     private Game game = null!;
     private Menu menu = null!;
     private SettingsMenu settingsMenu = null!;
+    private CreditsMenu creditsMenu = null!;
     private GameOver gameOver = null!;
     private InputManager inputManager = null!;
     private System.Windows.Forms.Timer gameTimer = null!;
@@ -44,6 +45,7 @@ public partial class Form1 : Form
         game = new Game(3); // Start at level 3 for interesting menu background
         menu = new Menu();
         settingsMenu = new SettingsMenu(this);
+        creditsMenu = new CreditsMenu();
         gameOver = new GameOver();
         inputManager = new InputManager();
         
@@ -155,6 +157,7 @@ public partial class Form1 : Form
         int currentScore = game.Score;
         bool wasPlayerDead = game.Player.IsDead();
         bool wasSettingsVisible = settingsMenu.IsVisible;
+        bool wasCreditsVisible = creditsMenu.IsVisible;
         
         // Reinitialize the game with new settings
         game = new Game(currentLevel);
@@ -165,6 +168,8 @@ public partial class Form1 : Form
         menu.RecalculateLayout();
         settingsMenu = new SettingsMenu(this);
         settingsMenu.RecalculateLayout();
+        creditsMenu = new CreditsMenu();
+        creditsMenu.RecalculateLayout();
         gameOver = new GameOver();
         gameOver.RecalculateLayout();
         
@@ -172,6 +177,11 @@ public partial class Form1 : Form
         if (wasSettingsVisible)
         {
             settingsMenu.Show();
+            menu.Hide();
+        }
+        else if (wasCreditsVisible)
+        {
+            creditsMenu.Show();
             menu.Hide();
         }
         
@@ -199,6 +209,12 @@ public partial class Form1 : Form
         if (settingsMenu.IsVisible)
         {
             settingsMenu.Render(e.Graphics, this);
+        }
+        
+        // Render credits menu on top if visible (with scaling)
+        if (creditsMenu.IsVisible)
+        {
+            creditsMenu.Render(e.Graphics, this);
         }
         
         // Render game over screen on top if visible (with scaling)
@@ -241,6 +257,10 @@ public partial class Form1 : Form
         {
             settingsMenu.HandleMouseMove(e.X, e.Y, this);
         }
+        else if (creditsMenu.IsVisible)
+        {
+            creditsMenu.HandleMouseMove(e.X, e.Y, this);
+        }
         else if (gameOver.IsVisible)
         {
             gameOver.HandleMouseMove(e.X, e.Y, this);
@@ -265,6 +285,12 @@ public partial class Form1 : Form
                 settingsMenu.Show();
                 menu.Hide();
             }
+            else if (result == "credits")
+            {
+                // Credits button was clicked - show credits menu
+                creditsMenu.Show();
+                menu.Hide();
+            }
         }
         else if (settingsMenu.IsVisible && e.Button == MouseButtons.Left)
         {
@@ -273,6 +299,15 @@ public partial class Form1 : Form
                 // Back button was clicked - return to main menu
                 // Settings are applied automatically when changed
                 settingsMenu.Hide();
+                menu.Show();
+            }
+        }
+        else if (creditsMenu.IsVisible && e.Button == MouseButtons.Left)
+        {
+            if (creditsMenu.HandleMouseClick(e.X, e.Y, this))
+            {
+                // Back button was clicked - return to main menu
+                creditsMenu.Hide();
                 menu.Show();
             }
         }

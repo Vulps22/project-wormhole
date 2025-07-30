@@ -3,6 +3,12 @@ using System.Drawing;
 
 namespace WormholeGame.Core
 {
+    public enum SettingsMenuAction
+    {
+        None,
+        BackToMainMenu
+    }
+
     public class SettingsMenu
     {
         public bool IsVisible { get; private set; }
@@ -113,7 +119,7 @@ namespace WormholeGame.Core
             else if (backButton.Contains(mouseX, mouseY))
             {
                 Hide();
-                return true; // Back to main menu
+                return false; // Back to main menu
             }
 
             return false;

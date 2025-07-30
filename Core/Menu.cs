@@ -10,8 +10,10 @@ namespace WormholeGame.Core
         
         private Rectangle playButton;
         private Rectangle settingsButton;
+        private Rectangle creditsButton;
         private bool isPlayButtonHovered;
         private bool isSettingsButtonHovered;
+        private bool isCreditsButtonHovered;
         
         // Menu constants
         private const int BUTTON_WIDTH = 200;
@@ -22,12 +24,13 @@ namespace WormholeGame.Core
         {
             IsVisible = true;
             
-            // Center the buttons
+            // Center the buttons (now 3 buttons)
             int buttonX = (Settings.Instance.Resolution.Width - BUTTON_WIDTH) / 2;
-            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 2 + BUTTON_SPACING)) / 2;
+            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 3 + BUTTON_SPACING * 2)) / 2;
             
             playButton = new Rectangle(buttonX, startY, BUTTON_WIDTH, BUTTON_HEIGHT);
             settingsButton = new Rectangle(buttonX, startY + BUTTON_HEIGHT + BUTTON_SPACING, BUTTON_WIDTH, BUTTON_HEIGHT);
+            creditsButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 2, BUTTON_WIDTH, BUTTON_HEIGHT);
         }
         
         public void Update()
@@ -37,18 +40,20 @@ namespace WormholeGame.Core
         
         public void RecalculateLayout()
         {
-            // Recalculate button positions for new resolution
+            // Recalculate button positions for new resolution (now 3 buttons)
             int buttonX = (Settings.Instance.Resolution.Width - BUTTON_WIDTH) / 2;
-            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 2 + BUTTON_SPACING)) / 2;
+            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 3 + BUTTON_SPACING * 2)) / 2;
             
             playButton = new Rectangle(buttonX, startY, BUTTON_WIDTH, BUTTON_HEIGHT);
             settingsButton = new Rectangle(buttonX, startY + BUTTON_HEIGHT + BUTTON_SPACING, BUTTON_WIDTH, BUTTON_HEIGHT);
+            creditsButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 2, BUTTON_WIDTH, BUTTON_HEIGHT);
         }
         
         public void HandleMouseMove(int mouseX, int mouseY)
         {
             isPlayButtonHovered = playButton.Contains(mouseX, mouseY);
             isSettingsButtonHovered = settingsButton.Contains(mouseX, mouseY);
+            isCreditsButtonHovered = creditsButton.Contains(mouseX, mouseY);
         }
         
         public void HandleMouseMove(int mouseX, int mouseY, Form form)
@@ -73,6 +78,11 @@ namespace WormholeGame.Core
             {
                 // Settings button clicked
                 return "settings"; // Signal to show settings
+            }
+            else if (creditsButton.Contains(mouseX, mouseY))
+            {
+                // Credits button clicked
+                return "credits"; // Signal to show credits
             }
             return ""; // No button clicked
         }
@@ -112,6 +122,9 @@ namespace WormholeGame.Core
             
             // Draw SETTINGS button
             RenderButton(graphics, settingsButton, isSettingsButtonHovered, "SETTINGS");
+            
+            // Draw CREDITS button
+            RenderButton(graphics, creditsButton, isCreditsButtonHovered, "CREDITS");
             
             // Draw title
             using (Font titleFont = new Font("Arial", 48, FontStyle.Bold))
