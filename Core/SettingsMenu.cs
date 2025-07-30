@@ -23,7 +23,18 @@ namespace WormholeGame.Core
         private bool isWindowModeHovered;
         private bool isResolutionHovered;
         private bool isApplyHovered;
-        private int currentResolutionIndex;
+        
+        // Dropdown state
+        private bool windowModeDropdownOpen = false;
+        private bool resolutionDropdownOpen = false;
+        private List<Rectangle> windowModeOptions = new List<Rectangle>();
+        private List<Rectangle> resolutionOptions = new List<Rectangle>();
+        private int hoveredWindowModeOption = -1;
+        private int hoveredResolutionOption = -1;
+        
+        // Pending settings (not applied until user clicks Apply)
+        private WindowMode pendingWindowMode;
+        private int pendingResolutionIndex;
 
         private Form Window { get; set; } = null!; // Reference to the main form
 
@@ -33,11 +44,12 @@ namespace WormholeGame.Core
             this.Window = window;
             IsVisible = false;
 
-            // Find current resolution index
+            // Initialize pending settings with current values
+            pendingWindowMode = Settings.Instance.WindowMode;
             var currentRes = Settings.Instance.Resolution;
-            currentResolutionIndex = Array.FindIndex(Settings.AvailableResolutions,
+            pendingResolutionIndex = Array.FindIndex(Settings.AvailableResolutions,
                 r => r.Width == currentRes.Width && r.Height == currentRes.Height);
-            if (currentResolutionIndex == -1) currentResolutionIndex = 0;
+            if (pendingResolutionIndex == -1) pendingResolutionIndex = 0;
 
             SetupButtons();
         }
@@ -54,6 +66,41 @@ namespace WormholeGame.Core
             resolutionButton = new Rectangle(centerX, startY + spacing, buttonWidth, buttonHeight);
             applyButton = new Rectangle(centerX, startY + spacing * 2, buttonWidth, buttonHeight);
             backButton = new Rectangle(centerX, startY + spacing * 3 + 20, buttonWidth, buttonHeight);
+            
+            SetupDropdownOptions();
+        }
+        
+        private void SetupDropdownOptions()
+        {
+            windowModeOptions.Clear();
+            resolutionOptions.Clear();
+            
+            int optionWidth = 180;
+            int optionHeight = 25;
+            int dropdownX = windowModeButton.Right + 20; // To the right of the main button
+            
+            // Window mode dropdown options
+            var modes = Enum.GetValues<WindowMode>();
+            for (int i = 0; i < modes.Length; i++)
+            {
+                Rectangle optionRect = new Rectangle(
+                    dropdownX, 
+                    windowModeButton.Y + (i * optionHeight), 
+                    optionWidth, 
+                    optionHeight);
+                windowModeOptions.Add(optionRect);
+            }
+            
+            // Resolution dropdown options
+            for (int i = 0; i < Settings.AvailableResolutions.Length; i++)
+            {
+                Rectangle optionRect = new Rectangle(
+                    dropdownX, 
+                    resolutionButton.Y + (i * optionHeight), 
+                    optionWidth, 
+                    optionHeight);
+                resolutionOptions.Add(optionRect);
+            }
         }
 
         public override void Update()
@@ -77,6 +124,34 @@ namespace WormholeGame.Core
             isResolutionHovered = resolutionButton.Contains(mouseX, mouseY);
             isApplyHovered = applyButton.Contains(mouseX, mouseY);
             isBackHovered = backButton.Contains(mouseX, mouseY);
+            
+            // Handle dropdown option hovers
+            hoveredWindowModeOption = -1;
+            hoveredResolutionOption = -1;
+            
+            if (windowModeDropdownOpen)
+            {
+                for (int i = 0; i < windowModeOptions.Count; i++)
+                {
+                    if (windowModeOptions[i].Contains(mouseX, mouseY))
+                    {
+                        hoveredWindowModeOption = i;
+                        break;
+                    }
+                }
+            }
+            
+            if (resolutionDropdownOpen)
+            {
+                for (int i = 0; i < resolutionOptions.Count; i++)
+                {
+                    if (resolutionOptions[i].Contains(mouseX, mouseY))
+                    {
+                        hoveredResolutionOption = i;
+                        break;
+                    }
+                }
+            }
         }
         
         public override void HandleMouseMove(int mouseX, int mouseY, Form form)
@@ -91,14 +166,49 @@ namespace WormholeGame.Core
 
         public override bool HandleMouseClick(int mouseX, int mouseY)
         {
+            // Check dropdown option clicks first
+            if (windowModeDropdownOpen)
+            {
+                for (int i = 0; i < windowModeOptions.Count; i++)
+                {
+                    if (windowModeOptions[i].Contains(mouseX, mouseY))
+                    {
+                        var modes = Enum.GetValues<WindowMode>();
+                        pendingWindowMode = modes[i];
+                        windowModeDropdownOpen = false;
+                        return false;
+                    }
+                }
+                // Click outside dropdown closes it
+                windowModeDropdownOpen = false;
+            }
+            
+            if (resolutionDropdownOpen)
+            {
+                for (int i = 0; i < resolutionOptions.Count; i++)
+                {
+                    if (resolutionOptions[i].Contains(mouseX, mouseY))
+                    {
+                        pendingResolutionIndex = i;
+                        resolutionDropdownOpen = false;
+                        return false;
+                    }
+                }
+                // Click outside dropdown closes it
+                resolutionDropdownOpen = false;
+            }
+            
+            // Handle main button clicks
             if (windowModeButton.Contains(mouseX, mouseY))
             {
-                CycleWindowMode();
+                windowModeDropdownOpen = !windowModeDropdownOpen;
+                resolutionDropdownOpen = false; // Close other dropdown
                 return false;
             }
             else if (resolutionButton.Contains(mouseX, mouseY))
             {
-                CycleResolution();
+                resolutionDropdownOpen = !resolutionDropdownOpen;
+                windowModeDropdownOpen = false; // Close other dropdown
                 return false;
             }
             else if (applyButton.Contains(mouseX, mouseY))
@@ -125,22 +235,12 @@ namespace WormholeGame.Core
             return HandleMouseClick(scaledX, scaledY);
         }
 
-        private void CycleWindowMode()
-        {
-            var modes = Enum.GetValues<WindowMode>();
-            int currentIndex = Array.IndexOf(modes, Settings.Instance.WindowMode);
-            currentIndex = (currentIndex + 1) % modes.Length;
-            Settings.Instance.WindowMode = modes[currentIndex];
-        }
-
-        private void CycleResolution()
-        {
-            currentResolutionIndex = (currentResolutionIndex + 1) % Settings.AvailableResolutions.Length;
-            Settings.Instance.Resolution = Settings.AvailableResolutions[currentResolutionIndex];
-        }
-
         private void ApplySettings()
         {
+            // Apply pending settings to actual settings
+            Settings.Instance.WindowMode = pendingWindowMode;
+            Settings.Instance.Resolution = Settings.AvailableResolutions[pendingResolutionIndex];
+            
             Settings.Instance.ApplyToForm(Window);
             IsDirty = true; // Mark settings as dirty so Form1 can reinitialize
 
@@ -172,18 +272,31 @@ namespace WormholeGame.Core
             }
 
             // Window Mode button
+            string pendingWindowModeText = GetWindowModeText(pendingWindowMode);
             RenderButton(graphics, windowModeButton, isWindowModeHovered,
-                $"Window Mode: {Settings.Instance.GetWindowModeText()}");
+                $"Window Mode: {pendingWindowModeText}");
 
             // Resolution button
+            string pendingResolutionText = GetResolutionText(Settings.AvailableResolutions[pendingResolutionIndex]);
             RenderButton(graphics, resolutionButton, isResolutionHovered,
-                $"Resolution: {Settings.Instance.GetResolutionText()}");
+                $"Resolution: {pendingResolutionText}");
 
             // Apply button
             RenderButton(graphics, applyButton, isApplyHovered, "APPLY");
 
             // Back button
             RenderButton(graphics, backButton, isBackHovered, "BACK");
+            
+            // Render dropdowns if open
+            if (windowModeDropdownOpen)
+            {
+                RenderWindowModeDropdown(graphics);
+            }
+            
+            if (resolutionDropdownOpen)
+            {
+                RenderResolutionDropdown(graphics);
+            }
         }
         
         public override void Render(Graphics graphics, Form form)
@@ -220,6 +333,94 @@ namespace WormholeGame.Core
                 float textX = button.X + (button.Width - textSize.Width) / 2;
                 float textY = button.Y + (button.Height - textSize.Height) / 2;
                 graphics.DrawString(text, buttonFont, textBrush, textX, textY);
+            }
+        }
+        
+        private string GetWindowModeText(WindowMode mode)
+        {
+            return mode switch
+            {
+                WindowMode.Windowed => "Windowed",
+                WindowMode.FullScreen => "Full Screen",
+                WindowMode.FullScreenWindowed => "Full Screen (Windowed)",
+                _ => "Unknown"
+            };
+        }
+        
+        private string GetResolutionText(Size resolution)
+        {
+            return $"{resolution.Width}x{resolution.Height}";
+        }
+        
+        private void RenderWindowModeDropdown(Graphics graphics)
+        {
+            var modes = Enum.GetValues<WindowMode>();
+            
+            for (int i = 0; i < modes.Length; i++)
+            {
+                bool isSelected = modes[i] == pendingWindowMode;
+                bool isHovered = hoveredWindowModeOption == i;
+                
+                // Dropdown background
+                Color bgColor = isSelected ? Color.FromArgb(100, Color.Blue) : 
+                               isHovered ? Color.FromArgb(50, Color.White) : 
+                               Color.FromArgb(180, Color.Black);
+                               
+                using (Brush bgBrush = new SolidBrush(bgColor))
+                {
+                    graphics.FillRectangle(bgBrush, windowModeOptions[i]);
+                }
+                
+                // Dropdown border
+                using (Pen borderPen = new Pen(Color.White, 1))
+                {
+                    graphics.DrawRectangle(borderPen, windowModeOptions[i]);
+                }
+                
+                // Dropdown text
+                Color textColor = isSelected ? Color.Yellow : Color.White;
+                using (Font optionFont = new Font("Arial", 12))
+                using (Brush textBrush = new SolidBrush(textColor))
+                {
+                    string text = GetWindowModeText(modes[i]);
+                    graphics.DrawString(text, optionFont, textBrush, 
+                        windowModeOptions[i].X + 5, windowModeOptions[i].Y + 2);
+                }
+            }
+        }
+        
+        private void RenderResolutionDropdown(Graphics graphics)
+        {
+            for (int i = 0; i < Settings.AvailableResolutions.Length; i++)
+            {
+                bool isSelected = i == pendingResolutionIndex;
+                bool isHovered = hoveredResolutionOption == i;
+                
+                // Dropdown background
+                Color bgColor = isSelected ? Color.FromArgb(100, Color.Blue) : 
+                               isHovered ? Color.FromArgb(50, Color.White) : 
+                               Color.FromArgb(180, Color.Black);
+                               
+                using (Brush bgBrush = new SolidBrush(bgColor))
+                {
+                    graphics.FillRectangle(bgBrush, resolutionOptions[i]);
+                }
+                
+                // Dropdown border
+                using (Pen borderPen = new Pen(Color.White, 1))
+                {
+                    graphics.DrawRectangle(borderPen, resolutionOptions[i]);
+                }
+                
+                // Dropdown text
+                Color textColor = isSelected ? Color.Yellow : Color.White;
+                using (Font optionFont = new Font("Arial", 12))
+                using (Brush textBrush = new SolidBrush(textColor))
+                {
+                    string text = GetResolutionText(Settings.AvailableResolutions[i]);
+                    graphics.DrawString(text, optionFont, textBrush, 
+                        resolutionOptions[i].X + 5, resolutionOptions[i].Y + 2);
+                }
             }
         }
     }
