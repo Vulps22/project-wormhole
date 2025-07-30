@@ -11,9 +11,11 @@ namespace WormholeGame.Core
         private Rectangle playButton;
         private Rectangle settingsButton;
         private Rectangle creditsButton;
+        private Rectangle quitButton;
         private bool isPlayButtonHovered;
         private bool isSettingsButtonHovered;
         private bool isCreditsButtonHovered;
+        private bool isQuitButtonHovered;
         
         // Menu constants
         private const int BUTTON_WIDTH = 200;
@@ -25,13 +27,14 @@ namespace WormholeGame.Core
             this.menuManager = manager;
             IsVisible = true;
             
-            // Center the buttons (now 3 buttons)
+            // Center the buttons (now 4 buttons)
             int buttonX = (Settings.Instance.Resolution.Width - BUTTON_WIDTH) / 2;
-            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 3 + BUTTON_SPACING * 2)) / 2;
+            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 4 + BUTTON_SPACING * 3)) / 2;
             
             playButton = new Rectangle(buttonX, startY, BUTTON_WIDTH, BUTTON_HEIGHT);
             settingsButton = new Rectangle(buttonX, startY + BUTTON_HEIGHT + BUTTON_SPACING, BUTTON_WIDTH, BUTTON_HEIGHT);
             creditsButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 2, BUTTON_WIDTH, BUTTON_HEIGHT);
+            quitButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 3, BUTTON_WIDTH, BUTTON_HEIGHT);
         }
         
         public override void Update()
@@ -41,13 +44,14 @@ namespace WormholeGame.Core
         
         public override void RecalculateLayout()
         {
-            // Recalculate button positions for new resolution (now 3 buttons)
+            // Recalculate button positions for new resolution (now 4 buttons)
             int buttonX = (Settings.Instance.Resolution.Width - BUTTON_WIDTH) / 2;
-            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 3 + BUTTON_SPACING * 2)) / 2;
+            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 4 + BUTTON_SPACING * 3)) / 2;
             
             playButton = new Rectangle(buttonX, startY, BUTTON_WIDTH, BUTTON_HEIGHT);
             settingsButton = new Rectangle(buttonX, startY + BUTTON_HEIGHT + BUTTON_SPACING, BUTTON_WIDTH, BUTTON_HEIGHT);
             creditsButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 2, BUTTON_WIDTH, BUTTON_HEIGHT);
+            quitButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 3, BUTTON_WIDTH, BUTTON_HEIGHT);
         }
         
         public override void HandleMouseMove(int mouseX, int mouseY)
@@ -55,6 +59,7 @@ namespace WormholeGame.Core
             isPlayButtonHovered = playButton.Contains(mouseX, mouseY);
             isSettingsButtonHovered = settingsButton.Contains(mouseX, mouseY);
             isCreditsButtonHovered = creditsButton.Contains(mouseX, mouseY);
+            isQuitButtonHovered = quitButton.Contains(mouseX, mouseY);
         }
         
         public override void HandleMouseMove(int mouseX, int mouseY, Form form)
@@ -85,6 +90,12 @@ namespace WormholeGame.Core
             {
                 // Credits button clicked
                 menuManager.ShowCreditsMenu();
+                return true;
+            }
+            else if (quitButton.Contains(mouseX, mouseY))
+            {
+                // Quit button clicked
+                menuManager.QuitGame();
                 return true;
             }
             return false; // No button clicked
@@ -118,6 +129,9 @@ namespace WormholeGame.Core
             
             // Draw CREDITS button
             RenderButton(graphics, creditsButton, isCreditsButtonHovered, "CREDITS");
+            
+            // Draw QUIT button
+            RenderButton(graphics, quitButton, isQuitButtonHovered, "QUIT");
             
             // Draw title
             using (Font titleFont = new Font("Arial", 48, FontStyle.Bold))

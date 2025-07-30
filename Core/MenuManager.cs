@@ -53,6 +53,11 @@ namespace WormholeGame.Core
             game.InitializeGame(1);
         }
 
+        public void QuitGame()
+        {
+            Application.Exit();
+        }
+
         public void Update()
         {
             currentMenu?.Update();
