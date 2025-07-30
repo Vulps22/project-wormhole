@@ -16,6 +16,9 @@ namespace WormholeGame.Core
         {
             this.form = form;
             this.game = game;
+            
+            // Start background music when MenuManager is created
+            AudioManager.Instance.PlayBackgroundMusic("sleepless-city.mp3", true);
         }
 
         public void ShowMainMenu()
@@ -71,6 +74,16 @@ namespace WormholeGame.Core
         public void HandleMouseClick(int mouseX, int mouseY, Form form)
         {
             currentMenu?.HandleMouseClick(mouseX, mouseY, form);
+        }
+
+        public void HandleMouseDown(int mouseX, int mouseY, Form form)
+        {
+            currentMenu?.HandleMouseDown(mouseX, mouseY, form);
+        }
+
+        public void HandleMouseUp(int mouseX, int mouseY, Form form)
+        {
+            currentMenu?.HandleMouseUp(mouseX, mouseY, form);
         }
 
         public void Render(Graphics graphics, Form form)

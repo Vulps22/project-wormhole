@@ -58,12 +58,10 @@ namespace WormholeGame.Core
                 {
                     SpawnMissile(Wormholes[i]);
                     missilesSpawned++;
-                    Console.WriteLine($"Level {Number}: Total missiles spawned: {missilesSpawned}/{MaxMissiles}");
                 }
                 
                 if (Wormholes[i].IsExpired())
                 {
-                    Console.WriteLine($"Level {Number}: Wormhole expired after spawning {Wormholes[i].MissilesSpawned} missiles");
                     Wormholes.RemoveAt(i);
                 }
             }
@@ -118,12 +116,10 @@ namespace WormholeGame.Core
                 {
                     SpawnMissile(Wormholes[i]);
                     missilesSpawned++;
-                    Console.WriteLine($"Level {Number}: Total missiles spawned: {missilesSpawned}/{MaxMissiles}");
                 }
                 
                 if (Wormholes[i].IsExpired())
                 {
-                    Console.WriteLine($"Level {Number}: Wormhole expired after spawning {Wormholes[i].MissilesSpawned} missiles");
                     Wormholes.RemoveAt(i);
                 }
             }
@@ -153,7 +149,6 @@ namespace WormholeGame.Core
             
             int availableCapacity = currentWormholeCapacity - missilesFromCurrentWormholes;
             
-            Console.WriteLine($"Level {Number}: Remaining missiles: {remainingMissiles}, Available capacity: {availableCapacity}");
             
             return remainingMissiles > availableCapacity;
         }
@@ -171,8 +166,6 @@ namespace WormholeGame.Core
             bool allMissilesGone = Missiles.Count == 0;
             if (shouldPrintDebugInfo)
             {
-                Console.WriteLine($"Level {Number} complete check: Missiles spawned: {missilesSpawned}, Missiles left: {Missiles.Count}");
-                Console.WriteLine($"Level {Number} complete: {allMissilesSpawned && allMissilesGone}");
             }
             return allMissilesSpawned && allMissilesGone;
         }
@@ -183,7 +176,6 @@ namespace WormholeGame.Core
             int y = random.Next(Wormhole.DEFAULT_SIZE, gameHeight - Wormhole.DEFAULT_SIZE);
             Wormholes.Add(new Wormhole(x, y));
             
-            Console.WriteLine($"Level {Number}: Spawned wormhole #{wormholesSpawned + 1}/{MaxWormholes} (can handle {MissilesPerWormhole} missiles)");
         }
         
         private void SpawnMissile(Wormhole wormhole)
@@ -195,7 +187,6 @@ namespace WormholeGame.Core
             
             Missiles.Add(new Missile(wormhole.X, wormhole.Y, velX, velY));
             
-            Console.WriteLine($"Level {Number}: Spawned missile #{missilesSpawned + 1}/{MaxMissiles}");
         }
         
         public void Reset()

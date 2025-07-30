@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Reflection.Metadata;
 
 namespace WormholeGame.Core
 {
@@ -17,12 +18,23 @@ namespace WormholeGame.Core
         private Rectangle backButton;
         private Rectangle windowModeButton;
         private Rectangle resolutionButton;
+        private Rectangle masterVolumeSlider;
+        private Rectangle musicVolumeSlider;
+        private Rectangle sfxVolumeSlider;
         private Rectangle applyButton;
 
         private bool isBackHovered;
         private bool isWindowModeHovered;
         private bool isResolutionHovered;
+        private bool isMasterVolumeHovered;
+        private bool isMusicVolumeHovered;
+        private bool isSfxVolumeHovered;
         private bool isApplyHovered;
+        
+        // Volume slider state
+        private bool isDraggingMasterVolume = false;
+        private bool isDraggingMusicVolume = false;
+        private bool isDraggingSfxVolume = false;
         
         // Dropdown state
         private bool windowModeDropdownOpen = false;
@@ -35,6 +47,9 @@ namespace WormholeGame.Core
         // Pending settings (not applied until user clicks Apply)
         private WindowMode pendingWindowMode;
         private int pendingResolutionIndex;
+        private float pendingMasterVolume;
+        private float pendingMusicVolume;
+        private float pendingSfxVolume;
 
         private Form Window { get; set; } = null!; // Reference to the main form
 
@@ -50,6 +65,11 @@ namespace WormholeGame.Core
             pendingResolutionIndex = Array.FindIndex(Settings.AvailableResolutions,
                 r => r.Width == currentRes.Width && r.Height == currentRes.Height);
             if (pendingResolutionIndex == -1) pendingResolutionIndex = 0;
+            
+            // Initialize pending volume settings
+            pendingMasterVolume = Settings.Instance.MasterVolume;
+            pendingMusicVolume = Settings.Instance.MusicVolume;
+            pendingSfxVolume = Settings.Instance.SfxVolume;
 
             SetupButtons();
         }
@@ -57,15 +77,26 @@ namespace WormholeGame.Core
         private void SetupButtons()
         {
             int buttonWidth = 200;
-            int buttonHeight = 30; // Smaller for text-only buttons
+            int buttonHeight = 30;
             int centerX = (Settings.Instance.Resolution.Width - buttonWidth) / 2;
-            int startY = 200;
-            int spacing = 40; // Closer together
+            int startY = 150; // Start higher to make room for volume sliders
+            int spacing = 45; // More spacing between elements
 
             windowModeButton = new Rectangle(centerX, startY, buttonWidth, buttonHeight);
             resolutionButton = new Rectangle(centerX, startY + spacing, buttonWidth, buttonHeight);
-            applyButton = new Rectangle(centerX, startY + spacing * 2, buttonWidth, buttonHeight);
-            backButton = new Rectangle(centerX, startY + spacing * 3 + 20, buttonWidth, buttonHeight);
+            
+            // Volume sliders - more spacing and better positioning
+            int sliderWidth = 200;
+            int sliderHeight = 20;
+            int sliderX = centerX; // Align with buttons
+            int volumeStartY = startY + spacing * 2 + 20; // More space after resolution
+            
+            masterVolumeSlider = new Rectangle(sliderX, volumeStartY, sliderWidth, sliderHeight);
+            musicVolumeSlider = new Rectangle(sliderX, volumeStartY + 40, sliderWidth, sliderHeight);
+            sfxVolumeSlider = new Rectangle(sliderX, volumeStartY + 80, sliderWidth, sliderHeight);
+            
+            applyButton = new Rectangle(centerX, volumeStartY + 140, buttonWidth, buttonHeight);
+            backButton = new Rectangle(centerX, volumeStartY + 180, buttonWidth, buttonHeight);
             
             SetupDropdownOptions();
         }
@@ -120,10 +151,34 @@ namespace WormholeGame.Core
 
         public override void HandleMouseMove(int mouseX, int mouseY)
         {
+            
             isWindowModeHovered = windowModeButton.Contains(mouseX, mouseY);
             isResolutionHovered = resolutionButton.Contains(mouseX, mouseY);
+            isMasterVolumeHovered = masterVolumeSlider.Contains(mouseX, mouseY);
+            isMusicVolumeHovered = musicVolumeSlider.Contains(mouseX, mouseY);
+            isSfxVolumeHovered = sfxVolumeSlider.Contains(mouseX, mouseY);
             isApplyHovered = applyButton.Contains(mouseX, mouseY);
             isBackHovered = backButton.Contains(mouseX, mouseY);
+
+            //Console.WriteLine($"[DEBUG] HandleMouseMove {isDraggingMasterVolume}");
+
+            // Handle volume slider dragging - allow dragging even outside slider bounds
+            if (isDraggingMasterVolume)
+            {
+                Console.WriteLine($"[DEBUG] HandleMouseMove Called! Mouse dragged to: {mouseX}, {mouseY}");
+                pendingMasterVolume = CalculateVolumeFromMouseX(mouseX, masterVolumeSlider);
+                AudioManager.Instance.UpdateMusicVolume(); // Preview volume change
+            }
+            else if (isDraggingMusicVolume)
+            {
+                pendingMusicVolume = CalculateVolumeFromMouseX(mouseX, musicVolumeSlider);
+                AudioManager.Instance.UpdateMusicVolume(); // Preview volume change
+            }
+            else if (isDraggingSfxVolume)
+            {
+                pendingSfxVolume = CalculateVolumeFromMouseX(mouseX, sfxVolumeSlider);
+                // Could play a preview SFX here
+            }
             
             // Handle dropdown option hovers
             hoveredWindowModeOption = -1;
@@ -166,6 +221,8 @@ namespace WormholeGame.Core
 
         public override bool HandleMouseClick(int mouseX, int mouseY)
         {
+            
+            
             // Check dropdown option clicks first
             if (windowModeDropdownOpen)
             {
@@ -224,6 +281,51 @@ namespace WormholeGame.Core
 
             return false;
         }
+
+        public override void HandleMouseDown(int mouseX, int mouseY, Form form)
+        {
+            HandleMouseDown(mouseX, mouseY);
+        }
+
+
+        public override void HandleMouseDown(int mouseX, int mouseY)
+        {
+            Console.WriteLine($"[DEBUG] HandleMouseDown Called! Mouse down at: {mouseX}, {mouseY}");
+            // Check volume slider clicks first - allow immediate volume setting and start dragging
+            if (masterVolumeSlider.Contains(mouseX, mouseY))
+            {
+                Console.WriteLine($"[DEBUG] Master volume slider down at: {mouseX}, {mouseY}");
+                isDraggingMasterVolume = true;
+                pendingMasterVolume = CalculateVolumeFromMouseX(mouseX, masterVolumeSlider);
+                AudioManager.Instance.UpdateMusicVolume(); // Immediate preview
+                return;
+            }
+            else if (musicVolumeSlider.Contains(mouseX, mouseY))
+            {
+                isDraggingMusicVolume = true;
+                pendingMusicVolume = CalculateVolumeFromMouseX(mouseX, musicVolumeSlider);
+                AudioManager.Instance.UpdateMusicVolume(); // Immediate preview
+                return;
+            }
+            else if (sfxVolumeSlider.Contains(mouseX, mouseY))
+            {
+                isDraggingSfxVolume = true;
+                pendingSfxVolume = CalculateVolumeFromMouseX(mouseX, sfxVolumeSlider);
+                // Could play immediate SFX preview here
+                return;
+            }
+        }
+
+        private float CalculateVolumeFromMouseX(int mouseX, Rectangle sliderRect)
+        {
+            // Calculate relative position within slider (0 to 1)
+            float relativeX = (float)(mouseX - sliderRect.X) / sliderRect.Width;
+
+            // Clamp to valid range
+            relativeX = Math.Max(0, Math.Min(1, relativeX));
+
+            return relativeX;
+        }
         
         public override bool HandleMouseClick(int mouseX, int mouseY, Form form)
         {
@@ -235,11 +337,30 @@ namespace WormholeGame.Core
             return HandleMouseClick(scaledX, scaledY);
         }
 
+        public override void HandleMouseUp(int mouseX, int mouseY, Form form)
+        {
+            // Scale mouse coordinates back to game resolution
+            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            int scaledX = (int)(mouseX / scaleX);
+            int scaledY = (int)(mouseY / scaleY);
+            
+            // Stop all volume dragging
+            isDraggingMasterVolume = false;
+            isDraggingMusicVolume = false;
+            isDraggingSfxVolume = false;
+        }
+
         private void ApplySettings()
         {
             // Apply pending settings to actual settings
             Settings.Instance.WindowMode = pendingWindowMode;
             Settings.Instance.Resolution = Settings.AvailableResolutions[pendingResolutionIndex];
+            Settings.Instance.MasterVolume = pendingMasterVolume;
+            Settings.Instance.MusicVolume = pendingMusicVolume;
+            Settings.Instance.SfxVolume = pendingSfxVolume;
+            
+            // Update audio manager with new volumes
+            AudioManager.Instance.UpdateMusicVolume();
             
             Settings.Instance.ApplyToForm(Window);
             IsDirty = true; // Mark settings as dirty so Form1 can reinitialize
@@ -248,7 +369,6 @@ namespace WormholeGame.Core
             SetupButtons();
 
             // This will be handled by Form1 when it detects settings change
-            Console.WriteLine("Settings applied!");
         }
 
         public override void Render(Graphics graphics)
@@ -286,6 +406,11 @@ namespace WormholeGame.Core
 
             // Back button
             RenderButton(graphics, backButton, isBackHovered, "BACK");
+            
+            // Volume sliders
+            RenderVolumeSlider(graphics, masterVolumeSlider, pendingMasterVolume, "Master Volume");
+            RenderVolumeSlider(graphics, musicVolumeSlider, pendingMusicVolume, "Music Volume");
+            RenderVolumeSlider(graphics, sfxVolumeSlider, pendingSfxVolume, "SFX Volume");
             
             // Render dropdowns if open
             if (windowModeDropdownOpen)
@@ -421,6 +546,77 @@ namespace WormholeGame.Core
                     graphics.DrawString(text, optionFont, textBrush, 
                         resolutionOptions[i].X + 5, resolutionOptions[i].Y + 2);
                 }
+            }
+        }
+
+        private void RenderVolumeSlider(Graphics graphics, Rectangle sliderRect, float volume, string label)
+        {
+            // Draw label above the slider with more spacing
+            using (Font labelFont = new Font("Arial", 12))
+            using (Brush labelBrush = new SolidBrush(Color.White))
+            {
+                graphics.DrawString(label, labelFont, labelBrush, 
+                    sliderRect.X, sliderRect.Y - 20);
+            }
+
+            // Draw slider track
+            using (Brush trackBrush = new SolidBrush(Color.Gray))
+            {
+                graphics.FillRectangle(trackBrush, sliderRect);
+            }
+
+            // Draw slider border
+            using (Pen borderPen = new Pen(Color.White, 2))
+            {
+                graphics.DrawRectangle(borderPen, sliderRect);
+            }
+
+            // Draw volume fill
+            int fillWidth = (int)(sliderRect.Width * volume);
+            if (fillWidth > 0)
+            {
+                Rectangle fillRect = new Rectangle(sliderRect.X, sliderRect.Y, fillWidth, sliderRect.Height);
+                using (Brush fillBrush = new SolidBrush(Color.LightBlue))
+                {
+                    graphics.FillRectangle(fillBrush, fillRect);
+                }
+            }
+
+            // Draw slider handle/thumb at current volume position
+            int handleX = sliderRect.X + (int)(sliderRect.Width * volume);
+            int handleY = sliderRect.Y - 2; // Slightly taller than track
+            int handleWidth = 6;
+            int handleHeight = sliderRect.Height + 4;
+            
+            Rectangle handleRect = new Rectangle(handleX - handleWidth/2, handleY, handleWidth, handleHeight);
+            
+            // Draw handle shadow for depth
+            Rectangle shadowRect = new Rectangle(handleRect.X + 1, handleRect.Y + 1, handleRect.Width, handleRect.Height);
+            using (Brush shadowBrush = new SolidBrush(Color.FromArgb(128, Color.Black)))
+            {
+                graphics.FillRectangle(shadowBrush, shadowRect);
+            }
+            
+            // Draw main handle
+            using (Brush handleBrush = new SolidBrush(Color.White))
+            {
+                graphics.FillRectangle(handleBrush, handleRect);
+            }
+            
+            // Draw handle border
+            using (Pen handleBorderPen = new Pen(Color.Black, 1))
+            {
+                graphics.DrawRectangle(handleBorderPen, handleRect);
+            }
+
+            // Draw volume percentage to the right of the slider
+            using (Font percentFont = new Font("Arial", 11))
+            using (Brush percentBrush = new SolidBrush(Color.White))
+            {
+                string percentText = $"{(int)(volume * 100)}%";
+                graphics.DrawString(percentText, percentFont, percentBrush,
+                    sliderRect.X + sliderRect.Width + 15, 
+                    sliderRect.Y + 2);
             }
         }
     }

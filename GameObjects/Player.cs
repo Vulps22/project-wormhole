@@ -40,7 +40,6 @@ namespace WormholeGame.GameObjects
             Health = Math.Max(0, Health - amount);
             if (Health <= 0)
             {
-                Console.WriteLine("💥 Player has been destroyed!");
             }
         }
         

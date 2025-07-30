@@ -26,7 +26,7 @@ public partial class Form1 : Form
     private void InitializeGame()
     {
         // Set up the form
-        this.Text = "Wormhole Game - Level 1";
+        this.Text = "Vortex Evader - Level 1";
         this.Size = new Size(Settings.Instance.Resolution.Width + 16, Settings.Instance.Resolution.Height + 39);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -56,6 +56,8 @@ public partial class Form1 : Form
         this.KeyUp += OnKeyUp;
         this.MouseMove += OnMouseMove;
         this.MouseClick += OnMouseClick;
+        this.MouseDown += OnMouseDown;
+        this.MouseUp += OnMouseUp;
     }
     
     private void GameLoop(object? sender, EventArgs e)
@@ -91,7 +93,7 @@ public partial class Form1 : Form
             game.Update();
             
             // Update window title
-            this.Text = $"Wormhole Game - Level {game.CurrentLevel.Number}";
+            this.Text = $"Vortex Evader - Level {game.CurrentLevel.Number}";
             
             // Handle player death during gameplay - show game over immediately
             if (game.Player.IsDead())
@@ -141,6 +143,27 @@ public partial class Form1 : Form
         if (e.Button == MouseButtons.Left)
         {
             menuManager.HandleMouseClick(e.X, e.Y, this);
+        }
+    }
+
+    private void OnMouseDown(object? sender, MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left)
+        {
+            menuManager.HandleMouseDown(e.X, e.Y, this);
+        }
+        else if (e.Button == MouseButtons.Right)
+        {
+            // Handle right-click if needed
+            // For now, just ignore it
+        }
+    }
+
+    private void OnMouseUp(object? sender, MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left)
+        {
+            menuManager.HandleMouseUp(e.X, e.Y, this);
         }
     }
 }

@@ -50,7 +50,6 @@ namespace WormholeGame.Core
         public void UpdateGame()
         {
             if (!IsRunning) return;
-            Console.WriteLine($"Wormholes: {Wormholes.Count}, Missiles: {Missiles.Count}, Level: {Level}");
             // Spawn wormholes periodically (but only up to current level)
             wormholeSpawnTimer++;
             if (wormholeSpawnTimer > 120 && wormholesSpawned < Level) // Every 2 seconds at 60 FPS, max = level

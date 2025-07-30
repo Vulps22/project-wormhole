@@ -16,6 +16,11 @@ namespace WormholeGame.Core
         public WindowMode WindowMode { get; set; } = WindowMode.Windowed;
         public Size Resolution { get; set; } = new Size(800, 600);
         
+        // Audio settings
+        public float MasterVolume { get; set; } = 1.0f;    // 0.0 to 1.0
+        public float MusicVolume { get; set; } = 0.4f;     // 0.0 to 1.0  
+        public float SfxVolume { get; set; } = 0.8f;       // 0.0 to 1.0
+        
         // Available resolutions
         public static readonly Size[] AvailableResolutions = new Size[]
         {

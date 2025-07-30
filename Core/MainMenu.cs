@@ -110,6 +110,21 @@ namespace WormholeGame.Core
             
             return HandleMouseClick(scaledX, scaledY);
         }
+
+        public override void HandleMouseDown(int mouseX, int mouseY)
+        {
+            // MainMenu doesn't need mouse down handling
+        }
+
+        public override void HandleMouseDown(int mouseX, int mouseY, Form form)
+        {
+            // MainMenu doesn't need mouse down handling
+        }
+
+        public override void HandleMouseUp(int mouseX, int mouseY, Form form)
+        {
+            // MainMenu doesn't need mouse up handling
+        }
         
         public override void Render(Graphics graphics)
         {
@@ -137,7 +152,7 @@ namespace WormholeGame.Core
             using (Font titleFont = new Font("Arial", 48, FontStyle.Bold))
             using (Brush titleBrush = new SolidBrush(Color.White))
             {
-                string title = "WORMHOLE";
+                string title = "VORTEX EVADER";
                 SizeF titleSize = graphics.MeasureString(title, titleFont);
                 float titleX = (Settings.Instance.Resolution.Width - titleSize.Width) / 2;
                 float titleY = playButton.Y - 120;

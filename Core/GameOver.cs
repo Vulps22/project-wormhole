@@ -163,5 +163,20 @@ namespace WormholeGame.Core
             
             return HandleMouseClick(scaledX, scaledY);
         }
+
+        public override void HandleMouseDown(int mouseX, int mouseY)
+        {
+            // GameOver doesn't need mouse down handling
+        }
+
+        public override void HandleMouseDown(int mouseX, int mouseY, Form form)
+        {
+            // GameOver doesn't need mouse down handling
+        }
+
+        public override void HandleMouseUp(int mouseX, int mouseY, Form form)
+        {
+            // GameOver doesn't need mouse up handling
+        }
     }
 }

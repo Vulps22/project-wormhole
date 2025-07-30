@@ -47,7 +47,6 @@ namespace WormholeGame.Core
             
             if (!Directory.Exists(creditPath))
             {
-                Console.WriteLine("Credits folder not found!");
                 return;
             }
 
@@ -85,7 +84,7 @@ namespace WormholeGame.Core
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error reading credit file {file}: {ex.Message}");
+                        Console.WriteLine($"[ERROR] Failed to read credit file '{file}': {ex.Message}");
                     }
                 }
 
@@ -95,7 +94,6 @@ namespace WormholeGame.Core
                 }
             }
 
-            Console.WriteLine($"Loaded {creditSections.Count} credit sections");
         }
 
         public override void Show()
@@ -143,6 +141,21 @@ namespace WormholeGame.Core
             int scaledY = (int)(mouseY / scaleY);
             
             return HandleMouseClick(scaledX, scaledY);
+        }
+
+        public override void HandleMouseDown(int mouseX, int mouseY)
+        {
+            // CreditsMenu doesn't need mouse down handling
+        }
+
+        public override void HandleMouseDown(int mouseX, int mouseY, Form form)
+        {
+            // CreditsMenu doesn't need mouse down handling
+        }
+
+        public override void HandleMouseUp(int mouseX, int mouseY, Form form)
+        {
+            // CreditsMenu doesn't need mouse up handling
         }
 
         public override void RecalculateLayout()
