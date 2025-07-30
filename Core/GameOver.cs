@@ -7,7 +7,9 @@ namespace WormholeGame.Core
     {
         private MenuManager menuManager;
         private Rectangle restartButton;
+        private Rectangle mainMenuButton;
         private bool isRestartHovered;
+        private bool isMainMenuHovered;
         private int finalLevel;
         private int finalScore;
         
@@ -17,15 +19,21 @@ namespace WormholeGame.Core
             this.finalLevel = level;
             this.finalScore = score;
             
-            // Position restart button in center of screen
+            SetupButtons();
+        }
+        
+        private void SetupButtons()
+        {
+            // Two buttons side by side
             int buttonWidth = 120;
-            int buttonHeight = 30; // Smaller for text-only
-            restartButton = new Rectangle(
-                (Settings.Instance.Resolution.Width - buttonWidth) / 2,
-                (Settings.Instance.Resolution.Height / 2) + 60,
-                buttonWidth,
-                buttonHeight
-            );
+            int buttonHeight = 30;
+            int buttonSpacing = 40;
+            int totalWidth = (buttonWidth * 2) + buttonSpacing;
+            int startX = (Settings.Instance.Resolution.Width - totalWidth) / 2;
+            int buttonY = (Settings.Instance.Resolution.Height / 2) + 60;
+            
+            restartButton = new Rectangle(startX, buttonY, buttonWidth, buttonHeight);
+            mainMenuButton = new Rectangle(startX + buttonWidth + buttonSpacing, buttonY, buttonWidth, buttonHeight);
         }
         
         public override void Update()
@@ -35,20 +43,13 @@ namespace WormholeGame.Core
         
         public override void RecalculateLayout()
         {
-            // Recalculate button position for new resolution
-            int buttonWidth = 120;
-            int buttonHeight = 30;
-            restartButton = new Rectangle(
-                (Settings.Instance.Resolution.Width - buttonWidth) / 2,
-                (Settings.Instance.Resolution.Height / 2) + 60,
-                buttonWidth,
-                buttonHeight
-            );
+            SetupButtons();
         }
         
         public override void HandleMouseMove(int mouseX, int mouseY)
         {
             isRestartHovered = restartButton.Contains(mouseX, mouseY);
+            isMainMenuHovered = mainMenuButton.Contains(mouseX, mouseY);
         }
         
         public override bool HandleMouseClick(int mouseX, int mouseY)
@@ -57,6 +58,11 @@ namespace WormholeGame.Core
             {
                 menuManager.StartGame();
                 return true; // Restart button clicked
+            }
+            else if (mainMenuButton.Contains(mouseX, mouseY))
+            {
+                menuManager.ShowMainMenu();
+                return true; // Main menu button clicked
             }
             return false;
         }
@@ -94,15 +100,27 @@ namespace WormholeGame.Core
             }
             
             // Restart button - modern text style
-            Color textColor = isRestartHovered ? Color.Gray : Color.White;
+            Color restartTextColor = isRestartHovered ? Color.Gray : Color.White;
             using (Font buttonFont = new Font("Arial", 16, FontStyle.Bold))
-            using (Brush textBrush = new SolidBrush(textColor))
+            using (Brush restartTextBrush = new SolidBrush(restartTextColor))
             {
-                string buttonText = "RESTART";
-                SizeF textSize = graphics.MeasureString(buttonText, buttonFont);
-                float textX = restartButton.X + (restartButton.Width - textSize.Width) / 2;
-                float textY = restartButton.Y + (restartButton.Height - textSize.Height) / 2;
-                graphics.DrawString(buttonText, buttonFont, textBrush, textX, textY);
+                string restartText = "RESTART";
+                SizeF restartTextSize = graphics.MeasureString(restartText, buttonFont);
+                float restartTextX = restartButton.X + (restartButton.Width - restartTextSize.Width) / 2;
+                float restartTextY = restartButton.Y + (restartButton.Height - restartTextSize.Height) / 2;
+                graphics.DrawString(restartText, buttonFont, restartTextBrush, restartTextX, restartTextY);
+            }
+            
+            // Main Menu button - modern text style
+            Color mainMenuTextColor = isMainMenuHovered ? Color.Gray : Color.White;
+            using (Font buttonFont = new Font("Arial", 16, FontStyle.Bold))
+            using (Brush mainMenuTextBrush = new SolidBrush(mainMenuTextColor))
+            {
+                string mainMenuText = "MAIN MENU";
+                SizeF mainMenuTextSize = graphics.MeasureString(mainMenuText, buttonFont);
+                float mainMenuTextX = mainMenuButton.X + (mainMenuButton.Width - mainMenuTextSize.Width) / 2;
+                float mainMenuTextY = mainMenuButton.Y + (mainMenuButton.Height - mainMenuTextSize.Height) / 2;
+                graphics.DrawString(mainMenuText, buttonFont, mainMenuTextBrush, mainMenuTextX, mainMenuTextY);
             }
         }
         
