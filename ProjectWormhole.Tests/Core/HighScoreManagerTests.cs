@@ -22,7 +22,7 @@ namespace ProjectWormhole.Tests.Core
             if (ShouldThrowOnRead)
                 throw new InvalidOperationException("Mock read error");
                 
-            return _files.TryGetValue(path, out string content) ? content : throw new System.IO.FileNotFoundException();
+            return _files.TryGetValue(path, out string? content) ? content : throw new System.IO.FileNotFoundException();
         }
         
         public void WriteAllText(string path, string content)

@@ -24,7 +24,7 @@ namespace ProjectWormhole.Core
         private readonly IFileSystem _fileSystem;
         private readonly string _highScoreFilePath;
         
-        public HighScoreManager(IFileSystem fileSystem = null, string customPath = null)
+        public HighScoreManager(IFileSystem? fileSystem = null, string? customPath = null)
         {
             _fileSystem = fileSystem ?? new FileSystemWrapper();
             
