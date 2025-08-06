@@ -57,7 +57,7 @@ namespace WormholeGame.Core
                 // Check collisions and handle damage
                 if (CheckCollisions())
                 {
-                    Player.TakeDamage(100);
+                    Player.TakeDamage(10);
 
                     // If player just died, spawn explosion missiles
                     if (Player.IsDead())

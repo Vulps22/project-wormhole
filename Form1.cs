@@ -98,6 +98,8 @@ public partial class Form1 : Form
             // Handle player death during gameplay - show game over immediately
             if (game.Player.IsDead())
             {
+                // Save high score before showing game over menu
+                HighScoreManager.SaveHighScore(game.Score);
                 menuManager.ShowGameOverMenu(game.CurrentLevel.Number, game.Score);
             }
         }

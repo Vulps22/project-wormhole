@@ -99,6 +99,20 @@ namespace WormholeGame.Core
                 graphics.DrawString(stats, statsFont, statsBrush, statsX, statsY);
             }
             
+            // Show "NEW HIGH SCORE!" if applicable
+            if (HighScoreManager.IsNewHighScore(finalScore))
+            {
+                using (Font highScoreFont = new Font("Arial", 20, FontStyle.Bold))
+                using (Brush highScoreBrush = new SolidBrush(Color.Gold))
+                {
+                    string newHighScoreText = "NEW HIGH SCORE!";
+                    SizeF newHighScoreSize = graphics.MeasureString(newHighScoreText, highScoreFont);
+                    float newHighScoreX = (Settings.Instance.Resolution.Width - newHighScoreSize.Width) / 2;
+                    float newHighScoreY = Settings.Instance.Resolution.Height / 2 + 20;
+                    graphics.DrawString(newHighScoreText, highScoreFont, highScoreBrush, newHighScoreX, newHighScoreY);
+                }
+            }
+            
             // Restart button - modern text style
             Color restartTextColor = isRestartHovered ? Color.Gray : Color.White;
             using (Font buttonFont = new Font("Arial", 16, FontStyle.Bold))

@@ -136,6 +136,18 @@ namespace WormholeGame.Core
                 graphics.FillRectangle(overlay, 0, 0, Settings.Instance.Resolution.Width, Settings.Instance.Resolution.Height);
             }
             
+            // Draw high score above PLAY button
+            using (Font highScoreFont = new Font("Arial", 20, FontStyle.Regular))
+            using (Brush highScoreBrush = new SolidBrush(Color.Gold))
+            {
+                int highScore = HighScoreManager.GetHighScore();
+                string highScoreText = $"High Score: {highScore:N0}";
+                SizeF highScoreSize = graphics.MeasureString(highScoreText, highScoreFont);
+                float highScoreX = (Settings.Instance.Resolution.Width - highScoreSize.Width) / 2;
+                float highScoreY = playButton.Y - 50; // Position above PLAY button
+                graphics.DrawString(highScoreText, highScoreFont, highScoreBrush, highScoreX, highScoreY);
+            }
+            
             // Draw PLAY button
             RenderButton(graphics, playButton, isPlayButtonHovered, "PLAY");
             
