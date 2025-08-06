@@ -1,10 +1,10 @@
 using System.Drawing;
 using System.Windows.Forms;
-using WormholeGame.Core;
-using WormholeGame.Input;
-using WormholeGame.GameObjects;
+using ProjectWormhole.Core;
+using ProjectWormhole.Input;
+using ProjectWormhole.GameObjects;
 
-namespace WormholeGame;
+namespace ProjectWormhole;
 
 public partial class Form1 : Form
 {
@@ -99,7 +99,7 @@ public partial class Form1 : Form
             if (game.Player.IsDead())
             {
                 // Save high score before showing game over menu
-                HighScoreManager.SaveHighScore(game.Score);
+                HighScoreManager.SaveHighScoreStatic(game.Score);
                 menuManager.ShowGameOverMenu(game.CurrentLevel.Number, game.Score);
             }
         }

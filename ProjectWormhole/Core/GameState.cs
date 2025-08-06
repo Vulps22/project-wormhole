@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using WormholeGame.GameObjects;
+using ProjectWormhole.GameObjects;
 
-namespace WormholeGame.Core
+namespace ProjectWormhole.Core
 {
     public class GameState
     {

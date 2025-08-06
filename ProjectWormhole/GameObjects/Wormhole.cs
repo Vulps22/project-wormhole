@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace WormholeGame.GameObjects
+namespace ProjectWormhole.GameObjects
 {
     public class Wormhole
     {
@@ -19,7 +19,7 @@ namespace WormholeGame.GameObjects
         // Wormhole constants - each object knows its own properties!
         public const int DEFAULT_SIZE = 100;
         public const int MISSILE_SPAWN_INTERVAL = 60; // Every second
-        public const int MAX_MISSILES_PER_WORMHOLE = 5;
+        public const int MAX_MISSILES_PER_WORMHOLE = 4;
         
         public Wormhole(int x, int y, int size = DEFAULT_SIZE)
         {

@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace WormholeGame.Core
+namespace ProjectWormhole.Core
 {
     public enum WindowMode
     {

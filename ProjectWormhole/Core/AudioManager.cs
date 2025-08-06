@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using NAudio.Wave;
 
-namespace WormholeGame.Core
+namespace ProjectWormhole.Core
 {
     public enum AudioType
     {

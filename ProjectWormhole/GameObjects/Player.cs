@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace WormholeGame.GameObjects
+namespace ProjectWormhole.GameObjects
 {
     public class Player
     {

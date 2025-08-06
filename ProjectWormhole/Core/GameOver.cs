@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace WormholeGame.Core
+namespace ProjectWormhole.Core
 {
     public class GameOverMenu : Menu
     {
@@ -100,7 +100,7 @@ namespace WormholeGame.Core
             }
             
             // Show "NEW HIGH SCORE!" if applicable
-            if (HighScoreManager.IsNewHighScore(finalScore))
+            if (HighScoreManager.IsNewHighScoreStatic(finalScore))
             {
                 using (Font highScoreFont = new Font("Arial", 20, FontStyle.Bold))
                 using (Brush highScoreBrush = new SolidBrush(Color.Gold))

@@ -1,8 +1,8 @@
 using System.Drawing;
-using WormholeGame.Core;
-using WormholeGame.GameObjects;
+using ProjectWormhole.Core;
+using ProjectWormhole.GameObjects;
 
-namespace WormholeGame.Rendering
+namespace ProjectWormhole.Rendering
 {
     public class GameRenderer
     {

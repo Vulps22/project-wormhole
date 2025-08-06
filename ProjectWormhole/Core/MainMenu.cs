@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace WormholeGame.Core
+namespace ProjectWormhole.Core
 {
     public class MainMenu : Menu
     {
@@ -140,7 +140,7 @@ namespace WormholeGame.Core
             using (Font highScoreFont = new Font("Arial", 20, FontStyle.Regular))
             using (Brush highScoreBrush = new SolidBrush(Color.Gold))
             {
-                int highScore = HighScoreManager.GetHighScore();
+                int highScore = HighScoreManager.GetHighScoreStatic();
                 string highScoreText = $"High Score: {highScore:N0}";
                 SizeF highScoreSize = graphics.MeasureString(highScoreText, highScoreFont);
                 float highScoreX = (Settings.Instance.Resolution.Width - highScoreSize.Width) / 2;

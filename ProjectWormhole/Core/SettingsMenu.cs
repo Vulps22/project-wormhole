@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Reflection.Metadata;
 
-namespace WormholeGame.Core
+namespace ProjectWormhole.Core
 {
     public enum SettingsMenuAction
     {

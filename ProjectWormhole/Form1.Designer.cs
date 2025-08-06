@@ -1,4 +1,4 @@
-﻿namespace WormholeGame;
+﻿namespace ProjectWormhole;
 
 partial class Form1
 {

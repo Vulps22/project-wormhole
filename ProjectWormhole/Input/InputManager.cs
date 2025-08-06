@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 
-namespace WormholeGame.Input
+namespace ProjectWormhole.Input
 {
     public class InputManager
     {

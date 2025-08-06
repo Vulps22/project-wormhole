@@ -4,7 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 
-namespace WormholeGame.Core
+namespace ProjectWormhole.Core
 {
     public class CreditSection
     {
