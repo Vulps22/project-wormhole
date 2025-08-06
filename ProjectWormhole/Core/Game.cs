@@ -4,6 +4,35 @@ using ProjectWormhole.GameObjects;
 
 namespace ProjectWormhole.Core
 {
+    // Interface for audio management to enable testing
+    public interface IAudioManager
+    {
+        void PlaySfx(string filename);
+    }
+    
+    // Wrapper for the actual AudioManager
+    public class AudioManagerWrapper : IAudioManager
+    {
+        public void PlaySfx(string filename)
+        {
+            AudioManager.Instance.PlaySfx(filename);
+        }
+    }
+    
+    // Interface for settings access to enable testing
+    public interface IGameSettings
+    {
+        Size Resolution { get; }
+        (float scaleX, float scaleY) GetScalingFactors(Form form);
+    }
+    
+    // Wrapper for the actual Settings
+    public class GameSettingsWrapper : IGameSettings
+    {
+        public Size Resolution => Settings.Instance.Resolution;
+        public (float scaleX, float scaleY) GetScalingFactors(Form form) => Settings.Instance.GetScalingFactors(form);
+    }
+
     public class Game
     {
         public Player Player { get; private set; } = null!;
@@ -11,11 +40,18 @@ namespace ProjectWormhole.Core
         public int Score { get; private set; }
         public bool IsRunning { get; private set; }
         public bool ShowHUD { get; set; } = true; // Whether to show HUD during rendering
-        private int levelTimer;
+        
+        private readonly IAudioManager _audioManager;
+        private readonly IGameSettings _settings;
+        private readonly IRandomGenerator _random;
+        private int _levelTimer;
+        
+        // Expose private fields for testing
+        public int LevelTimer => _levelTimer;
 
         // Game world dimensions - now dynamic based on settings
-        public int GameWidth => Settings.Instance.Resolution.Width;
-        public int GameHeight => Settings.Instance.Resolution.Height;
+        public int GameWidth => _settings.Resolution.Width;
+        public int GameHeight => _settings.Resolution.Height;
 
         // Legacy constants for backward compatibility
         public const int GAME_WIDTH = 800;
@@ -27,20 +63,25 @@ namespace ProjectWormhole.Core
             Score = score;
         }
 
-        public Game(int startingLevel = 1)
+        public Game(int startingLevel = 1, IAudioManager? audioManager = null, IGameSettings? settings = null, IRandomGenerator? randomGenerator = null)
         {
+            _audioManager = audioManager ?? new AudioManagerWrapper();
+            _settings = settings ?? new GameSettingsWrapper();
+            _random = randomGenerator ?? new SystemRandomGenerator();
             InitializeGame(startingLevel);
         }
 
         public void InitializeGame(int startingLevel = 1)
         {
+            if (startingLevel <= 0)
+                throw new ArgumentException("Starting level must be positive", nameof(startingLevel));
+                
             Score = 0;
             IsRunning = true;
-            levelTimer = 0;
+            _levelTimer = 0;
 
             Player = new Player(GameWidth / 2, GameHeight / 2);
-            CurrentLevel = new Level(startingLevel);
-
+            CurrentLevel = new Level(startingLevel, _random);
         }
 
         public void Update()
@@ -63,42 +104,45 @@ namespace ProjectWormhole.Core
                     if (Player.IsDead())
                     {
                         SpawnExplosionMissiles();
-                        AudioManager.Instance.PlaySfx("death.mp3");
+                        _audioManager.PlaySfx("death.mp3");
                     }
                 }
 
-                if (CurrentLevel.IsLevelComplete(levelTimer % 60 == 0))
+                if (CurrentLevel.IsLevelComplete(_levelTimer % 60 == 0))
                 {
                     AdvanceToNextLevel();
                 }
 
                 // Award survival points smoothly with danger multiplier!
-                if (levelTimer % 6 == 0)
+                if (_levelTimer % 6 == 0)
                 {
                     int multiplier = CalculateDangerMultiplier();
                     Score += multiplier;
-
-                    if (multiplier > 1)
-                    {
-                    }
                 }
 
                 // Output debug info (less frequently)
-                if (levelTimer % 60 == 0) // Every second
+                if (_levelTimer % 60 == 0) // Every second
                 {
+                    // Debug output could be added here if needed
                 }
             }
 
-            levelTimer++;
+            _levelTimer++;
         }
 
         public void MovePlayer(int deltaX, int deltaY)
         {
+            if (Player == null)
+                throw new InvalidOperationException("Game not initialized");
+                
             Player.Move(deltaX, deltaY, GameWidth, GameHeight);
         }
 
         public void Render(Graphics graphics)
         {
+            if (graphics == null)
+                throw new ArgumentNullException(nameof(graphics));
+                
             // Clear screen
             graphics.Clear(Color.Black);
 
@@ -128,8 +172,13 @@ namespace ProjectWormhole.Core
 
         public void Render(Graphics graphics, Form form)
         {
+            if (graphics == null)
+                throw new ArgumentNullException(nameof(graphics));
+            if (form == null)
+                throw new ArgumentNullException(nameof(form));
+                
             // Get scaling factors
-            var (scaleX, scaleY) = Settings.Instance.GetScalingFactors(form);
+            var (scaleX, scaleY) = _settings.GetScalingFactors(form);
 
             // Save the original transform
             var originalTransform = graphics.Transform;
@@ -240,16 +289,15 @@ namespace ProjectWormhole.Core
 
         private void SpawnExplosionMissiles()
         {
-            Random random = new Random();
-            int explosionMissiles = 10;
+            const int explosionMissiles = 10;
 
             for (int i = 0; i < explosionMissiles; i++)
             {
                 // Calculate random direction (angle in radians)
-                double angle = random.NextDouble() * 2 * Math.PI;
+                double angle = _random.NextDouble() * 2 * Math.PI;
 
                 // Random speed between 3 and 8 for variety
-                double speed = 3 + random.NextDouble() * 5;
+                double speed = 3 + _random.NextDouble() * 5;
 
                 // Calculate velocity components
                 double velX = Math.Cos(angle) * speed;
@@ -259,7 +307,6 @@ namespace ProjectWormhole.Core
                 Missile explosionMissile = new Missile(Player.X, Player.Y, velX, velY);
                 CurrentLevel.Missiles.Add(explosionMissile);
             }
-
         }
 
         public void RestartGame()
@@ -270,9 +317,8 @@ namespace ProjectWormhole.Core
         private void AdvanceToNextLevel()
         {
             CurrentLevel.Reset();
-            CurrentLevel = new Level(CurrentLevel.Number + 1);
-            levelTimer = 0;
-
+            CurrentLevel = new Level(CurrentLevel.Number + 1, _random);
+            _levelTimer = 0;
         }
 
         public bool CanContinuePlaying()
