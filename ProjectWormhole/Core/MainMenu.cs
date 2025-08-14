@@ -10,10 +10,12 @@ namespace ProjectWormhole.Core
         
         private Rectangle playButton;
         private Rectangle settingsButton;
+        private Rectangle statsButton;
         private Rectangle creditsButton;
         private Rectangle quitButton;
         private bool isPlayButtonHovered;
         private bool isSettingsButtonHovered;
+        private bool isStatsButtonHovered;
         private bool isCreditsButtonHovered;
         private bool isQuitButtonHovered;
         
@@ -27,14 +29,15 @@ namespace ProjectWormhole.Core
             this.menuManager = manager;
             IsVisible = true;
             
-            // Center the buttons (now 4 buttons)
+            // Center the buttons (now 5 buttons)
             int buttonX = (Settings.Instance.Resolution.Width - BUTTON_WIDTH) / 2;
-            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 4 + BUTTON_SPACING * 3)) / 2;
+            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 5 + BUTTON_SPACING * 4)) / 2;
             
             playButton = new Rectangle(buttonX, startY, BUTTON_WIDTH, BUTTON_HEIGHT);
             settingsButton = new Rectangle(buttonX, startY + BUTTON_HEIGHT + BUTTON_SPACING, BUTTON_WIDTH, BUTTON_HEIGHT);
-            creditsButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 2, BUTTON_WIDTH, BUTTON_HEIGHT);
-            quitButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 3, BUTTON_WIDTH, BUTTON_HEIGHT);
+            statsButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 2, BUTTON_WIDTH, BUTTON_HEIGHT);
+            creditsButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 3, BUTTON_WIDTH, BUTTON_HEIGHT);
+            quitButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 4, BUTTON_WIDTH, BUTTON_HEIGHT);
         }
         
         public override void Update()
@@ -44,20 +47,22 @@ namespace ProjectWormhole.Core
         
         public override void RecalculateLayout()
         {
-            // Recalculate button positions for new resolution (now 4 buttons)
+            // Recalculate button positions for new resolution (now 5 buttons)
             int buttonX = (Settings.Instance.Resolution.Width - BUTTON_WIDTH) / 2;
-            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 4 + BUTTON_SPACING * 3)) / 2;
+            int startY = (Settings.Instance.Resolution.Height - (BUTTON_HEIGHT * 5 + BUTTON_SPACING * 4)) / 2;
             
             playButton = new Rectangle(buttonX, startY, BUTTON_WIDTH, BUTTON_HEIGHT);
             settingsButton = new Rectangle(buttonX, startY + BUTTON_HEIGHT + BUTTON_SPACING, BUTTON_WIDTH, BUTTON_HEIGHT);
-            creditsButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 2, BUTTON_WIDTH, BUTTON_HEIGHT);
-            quitButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 3, BUTTON_WIDTH, BUTTON_HEIGHT);
+            statsButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 2, BUTTON_WIDTH, BUTTON_HEIGHT);
+            creditsButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 3, BUTTON_WIDTH, BUTTON_HEIGHT);
+            quitButton = new Rectangle(buttonX, startY + (BUTTON_HEIGHT + BUTTON_SPACING) * 4, BUTTON_WIDTH, BUTTON_HEIGHT);
         }
         
         public override void HandleMouseMove(int mouseX, int mouseY)
         {
             isPlayButtonHovered = playButton.Contains(mouseX, mouseY);
             isSettingsButtonHovered = settingsButton.Contains(mouseX, mouseY);
+            isStatsButtonHovered = statsButton.Contains(mouseX, mouseY);
             isCreditsButtonHovered = creditsButton.Contains(mouseX, mouseY);
             isQuitButtonHovered = quitButton.Contains(mouseX, mouseY);
         }
@@ -84,6 +89,12 @@ namespace ProjectWormhole.Core
             {
                 // Settings button clicked
                 menuManager.ShowSettingsMenu();
+                return true;
+            }
+            else if (statsButton.Contains(mouseX, mouseY))
+            {
+                // Stats button clicked
+                menuManager.ShowStatsMenu();
                 return true;
             }
             else if (creditsButton.Contains(mouseX, mouseY))
@@ -153,6 +164,9 @@ namespace ProjectWormhole.Core
             
             // Draw SETTINGS button
             RenderButton(graphics, settingsButton, isSettingsButtonHovered, "SETTINGS");
+            
+            // Draw STATS button
+            RenderButton(graphics, statsButton, isStatsButtonHovered, "STATS");
             
             // Draw CREDITS button
             RenderButton(graphics, creditsButton, isCreditsButtonHovered, "CREDITS");
