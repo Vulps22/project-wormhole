@@ -38,8 +38,8 @@ namespace ProjectWormhole.Core
         
         // Level configuration - make constants for better testability
         public int MaxMissiles => Number * 3;
-        public int MaxWormholes => (MaxMissiles + 4) / 5; // Ceiling division: each wormhole handles up to 5 missiles
-        public const int MissilesPerWormhole = 5;
+        public int MaxWormholes => (MaxMissiles + Wormhole.MAX_MISSILES_PER_WORMHOLE - 1) / Wormhole.MAX_MISSILES_PER_WORMHOLE; // Ceiling division
+        public int MissilesPerWormhole => Wormhole.MAX_MISSILES_PER_WORMHOLE;
         public const int WormholeSpawnInterval = 120; // 2 seconds at 60 FPS
         
         // Expose private fields for testing
