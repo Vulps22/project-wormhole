@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using ProjectWormhole.GameObjects;
 
 namespace ProjectWormhole.Core
@@ -46,6 +48,15 @@ namespace ProjectWormhole.Core
         private readonly IRandomGenerator _random;
         private int _levelTimer;
         
+        // Statistics tracking
+        private DateTime _gameStartTime;
+        private DateTime _lastHitTime;
+        private bool _statsRecorded; // To ensure we only record stats once per game
+        private List<double> _dangerMultiplierHistory = new List<double>();
+        private int _totalMissilesSpawned;
+        private int _missilesAtGameStart;
+        private int _frameCounter = 0; // To reduce stats recording frequency
+        
         // Expose private fields for testing
         public int LevelTimer => _levelTimer;
 
@@ -80,8 +91,19 @@ namespace ProjectWormhole.Core
             IsRunning = true;
             _levelTimer = 0;
 
+            // Initialize statistics tracking
+            _gameStartTime = DateTime.Now;
+            _lastHitTime = DateTime.Now;
+            _statsRecorded = false;
+            _dangerMultiplierHistory.Clear();
+            _totalMissilesSpawned = 0;
+            _frameCounter = 0;
+
             Player = new Player(GameWidth / 2, GameHeight / 2);
             CurrentLevel = new Level(startingLevel, _random);
+            
+            // Record initial missile count
+            _missilesAtGameStart = CurrentLevel.Missiles.Count;
         }
 
         public void Update()
@@ -92,19 +114,44 @@ namespace ProjectWormhole.Core
             // Only update game logic if player is alive
             if (!Player.IsDead())
             {
+                // Track danger multiplier locally (don't save to file until game ends)
+                int dangerMultiplier = CalculateDangerMultiplier();
+                _dangerMultiplierHistory.Add(dangerMultiplier);
+                
+                // Only record stats in memory every 60 frames (once per second) AND only when actually playing
+                _frameCounter++;
+                if (_frameCounter % 60 == 0 && IsRunning && ShowHUD) // ShowHUD indicates we're in gameplay, not menu
+                {
+                    StatsManager.RecordDangerMultiplierStatic(dangerMultiplier);
+                    StatsManager.RecordTimeAliveStatic(60); // 60 frames = ~1 second
+                }
+
                 // Update wormholes and spawn new missiles
+                int missilesBefore = CurrentLevel.Missiles.Count;
+                
                 CurrentLevel.UpdateWormholes(GameWidth, GameHeight);
+                
+                // Track missiles spawned for avoidance calculation
+                int newMissiles = CurrentLevel.Missiles.Count - missilesBefore;
+                _totalMissilesSpawned += newMissiles;
 
                 // Check collisions and handle damage
                 if (CheckCollisions())
                 {
                     Player.TakeDamage(10);
+                    // Only record hit if we're actually playing (not in menu)
+                    if (IsRunning && ShowHUD)
+                    {
+                        StatsManager.RecordHitStatic(); // Record hit but don't save yet
+                    }
+                    _lastHitTime = DateTime.Now;
 
                     // If player just died, spawn explosion missiles
                     if (Player.IsDead())
                     {
                         SpawnExplosionMissiles();
                         _audioManager.PlaySfx("death.mp3");
+                        RecordGameStats(); // Record stats when game ends and SAVE to file
                     }
                 }
 
@@ -314,11 +361,48 @@ namespace ProjectWormhole.Core
             InitializeGame(1);
         }
 
+        public void ExitToMainMenu()
+        {
+            // If player is exiting mid-game, record stats for the current session
+            if (!_statsRecorded && IsRunning && !Player.IsDead())
+            {
+                RecordGameStats();
+            }
+        }
+
         private void AdvanceToNextLevel()
         {
             CurrentLevel.Reset();
             CurrentLevel = new Level(CurrentLevel.Number + 1, _random);
             _levelTimer = 0;
+        }
+
+        private void RecordGameStats()
+        {
+            if (_statsRecorded) return; // Only record once per game
+            
+            int playTimeSeconds = (int)(DateTime.Now - _gameStartTime).TotalSeconds;
+            
+            // Calculate average danger multiplier for this game
+            double averageDangerMultiplier = _dangerMultiplierHistory.Count > 0 
+                ? _dangerMultiplierHistory.Average() 
+                : 1.0;
+            
+            // Calculate missiles avoided (total spawned minus hits)
+            int missilesAvoided = Math.Max(0, _totalMissilesSpawned - 1); // -1 for the hit that killed us
+            for (int i = 0; i < missilesAvoided; i++)
+            {
+                StatsManager.RecordMissileAvoidedStatic();
+            }
+            
+            // Record game session data
+            StatsManager.RecordGameSessionStatic(averageDangerMultiplier, playTimeSeconds);
+            StatsManager.RecordGameCompletedStatic(Score, CurrentLevel.Number, playTimeSeconds);
+            
+            // Force save to file now that game is over
+            StatsManager.ForceSaveStatic();
+            
+            _statsRecorded = true;
         }
 
         public bool CanContinuePlaying()
