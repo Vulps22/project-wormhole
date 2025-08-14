@@ -23,6 +23,12 @@ namespace ProjectWormhole.Core
 
         public void ShowMainMenu()
         {
+            // If we're coming from an active game, save stats before going to main menu
+            if (currentMenu == null) // No current menu means we're in-game
+            {
+                game.ExitToMainMenu();
+            }
+            
             currentMenu?.Hide();
             currentMenu = new MainMenu(this);
             currentMenu.Show();
@@ -39,6 +45,13 @@ namespace ProjectWormhole.Core
         {
             currentMenu?.Hide();
             currentMenu = new CreditsMenu(this);
+            currentMenu.Show();
+        }
+
+        public void ShowStatsMenu()
+        {
+            currentMenu?.Hide();
+            currentMenu = new StatsMenu(this);
             currentMenu.Show();
         }
 
