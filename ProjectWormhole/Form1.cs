@@ -68,6 +68,13 @@ public partial class Form1 : Form
             game.Update(); // Update game in background
             menuManager.Update(); // Update current menu
             
+            // Check for developer easter egg even in menus
+            if (inputManager.CheckDeveloperEasterEgg())
+            {
+                // Kill the player instantly with massive damage
+                game.Player.TakeDamage(1000);
+            }
+            
             // Handle player death during menu - silent restart after delay
             if (game.Player.IsDead())
             {
@@ -90,6 +97,14 @@ public partial class Form1 : Form
             // Handle input for gameplay
             var (deltaX, deltaY) = inputManager.GetMovementInput(Player.DEFAULT_SPEED);
             game.MovePlayer(deltaX, deltaY);
+            
+            // Check for developer easter egg
+            if (inputManager.CheckDeveloperEasterEgg())
+            {
+                // Kill the player instantly with massive damage
+                game.Player.TakeDamage(1000);
+            }
+            
             game.Update();
             
             // Update window title
@@ -118,9 +133,10 @@ public partial class Form1 : Form
     
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
-        if (menuManager.HasActiveMenu()) return; // Ignore input when menu is visible
-        
+        // Always handle easter egg input regardless of menu state
         inputManager.OnKeyDown(e.KeyCode);
+        
+        if (menuManager.HasActiveMenu()) return; // Ignore other input when menu is visible
         
         if (e.KeyCode == Keys.Escape)
         {
@@ -130,9 +146,10 @@ public partial class Form1 : Form
     
     private void OnKeyUp(object? sender, KeyEventArgs e)
     {
-        if (menuManager.HasActiveMenu()) return; // Ignore input when menu is visible
-        
+        // Always handle easter egg input regardless of menu state
         inputManager.OnKeyUp(e.KeyCode);
+        
+        // No other key up handling needed for menus currently
     }
     
     private void OnMouseMove(object? sender, MouseEventArgs e)
