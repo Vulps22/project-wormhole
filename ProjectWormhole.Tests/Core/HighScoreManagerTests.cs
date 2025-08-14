@@ -17,6 +17,8 @@ namespace ProjectWormhole.Tests.Core
         
         public bool FileExists(string path) => _files.ContainsKey(path);
         
+        public string GetCurrentDirectory() => "C:\\fake\\dir";
+        
         public string ReadAllText(string path)
         {
             if (ShouldThrowOnRead)

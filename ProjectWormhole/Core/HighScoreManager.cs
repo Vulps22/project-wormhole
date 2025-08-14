@@ -9,6 +9,7 @@ namespace ProjectWormhole.Core
         string ReadAllText(string path);
         void WriteAllText(string path, string content);
         void CreateDirectory(string path);
+        string GetCurrentDirectory();
     }
     
     public class FileSystemWrapper : IFileSystem
@@ -17,6 +18,7 @@ namespace ProjectWormhole.Core
         public string ReadAllText(string path) => File.ReadAllText(path);
         public void WriteAllText(string path, string content) => File.WriteAllText(path, content);
         public void CreateDirectory(string path) => Directory.CreateDirectory(path);
+        public string GetCurrentDirectory() => Directory.GetCurrentDirectory();
     }
     
     public class HighScoreManager
