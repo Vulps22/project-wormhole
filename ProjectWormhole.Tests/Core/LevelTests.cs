@@ -96,8 +96,11 @@ namespace ProjectWormhole.Tests.Core
         [Fact]
         public void Level_Constants_HaveExpectedValues()
         {
+            // Arrange
+            var level = new Level(1);
+            
             // Assert
-            Assert.Equal(5, Level.MissilesPerWormhole);
+            Assert.Equal(4, level.MissilesPerWormhole); // Now references Wormhole.MAX_MISSILES_PER_WORMHOLE
             Assert.Equal(120, Level.WormholeSpawnInterval);
         }
         
@@ -442,10 +445,10 @@ namespace ProjectWormhole.Tests.Core
             
             // Assert
             Assert.Equal(levelNumber * 3, level.MaxMissiles);
-            Assert.Equal((level.MaxMissiles + 4) / 5, level.MaxWormholes);
+            Assert.Equal((level.MaxMissiles + level.MissilesPerWormhole - 1) / level.MissilesPerWormhole, level.MaxWormholes);
             
             // Verify wormholes can handle the missiles
-            int totalCapacity = level.MaxWormholes * Level.MissilesPerWormhole;
+            int totalCapacity = level.MaxWormholes * level.MissilesPerWormhole;
             Assert.True(totalCapacity >= level.MaxMissiles);
         }
         
