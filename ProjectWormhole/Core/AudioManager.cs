@@ -78,11 +78,25 @@ namespace ProjectWormhole.Core
         public NAudioEngine() { _wavePlayer = new WaveOutEvent(); }
         public void Init(IWaveProvider provider)
         {
-            if (provider is IWaveProvider wp)
+            if (provider == null)
+                throw new ArgumentNullException(nameof(provider));
+                
+            // Handle the case where provider is our wrapper
+            if (provider is NAudioFileReaderWrapper wrapper)
             {
-                // This is a bit of a hack, but we need to get the underlying WaveStream
-                // In a real scenario, you might have a more robust abstraction
-                _wavePlayer.Init(provider as NAudio.Wave.IWaveProvider);
+                _wavePlayer.Init(wrapper.UnderlyingReader);
+            }
+            else if (provider is LoopStream loopStream)
+            {
+                _wavePlayer.Init(loopStream);
+            }
+            else if (provider is NAudio.Wave.IWaveProvider nAudioProvider)
+            {
+                _wavePlayer.Init(nAudioProvider);
+            }
+            else
+            {
+                throw new ArgumentException($"Unsupported provider type: {provider.GetType()}");
             }
         }
         public void Play() => _wavePlayer.Play();
@@ -107,6 +121,9 @@ namespace ProjectWormhole.Core
         public int Read(byte[] buffer, int offset, int count) => _reader.Read(buffer, offset, count);
         public void Dispose() => _reader.Dispose();
         public static implicit operator WaveStream(NAudioFileReaderWrapper wrapper) => wrapper._reader;
+        
+        // Public property to access the underlying reader for NAudio operations
+        public AudioFileReader UnderlyingReader => _reader;
     }
 
 
@@ -197,6 +214,7 @@ namespace ProjectWormhole.Core
                 string sfxPath = Path.Combine(_fileSystem.GetCurrentDirectory(), "audio", "sfx", filename);
                 if (!_fileSystem.FileExists(sfxPath))
                 {
+                    Console.WriteLine($"[WARNING] SFX file not found: {sfxPath}");
                     return;
                 }
 
